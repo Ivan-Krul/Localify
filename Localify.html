@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Localify</title>
+    <meta charset="UTF-8" />
+
+    <style>
+        body {
+            background-color: #111;
+            color: white;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+
+        #title_container {
+            background-color: #008000;
+            text-align: center;
+            font-size: 200%;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor:pointer;
+        }
+
+        #player {
+            width: 100%
+        }
+
+        #table_recommend_playlist_container {
+            width: 100%;
+            background-color: #222;
+        }
+
+        .playlist {
+            background-color: #333;
+        }
+
+        .folder {
+            background-color: #deb616;
+            font-size: 1.5ch;
+            color: black;
+        }
+
+        #table_recommend_playlist_container tr {
+            display: block;
+            float: left;
+        }
+
+        #table_recommend_playlist_container td {
+            display: block;
+            padding: 0.5vw;
+        }
+
+        #table_recommend_playlist_container tr td:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="title_container">
+        <span>Localify</span>
+    </div>
+    <div id="current_player_container">
+        <button id="button_chooseRandomly">Choose Randomly</button>
+        <button id="button_next">Next</button>
+        <audio controls id="player"></audio>
+
+        <div>
+            <label for="name">Name:&ThickSpace;&ThickSpace;</label>
+            <span id="name"></span>
+        </div>
+
+        <div>
+            <label for="album">Album:&ThickSpace;&ThickSpace;</label>
+            <span id="album"></span>
+        </div>
+    </div>
+
+    <table id="table_recommend_playlist_container">
+    </table>
+
+    <script>
+        // main tools
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
+        function readFromFileURL(fileURL) {
+            return new Promise((resolve, reject) => {
+                fetch(fileURL)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const reader = new FileReader();
+                        reader.onload = function (event) {
+                            const text = event.target.result;
+                            resolve(text);
+                        };
+                        reader.onerror = function (event) {
+                            console.error("Error reading file:", event.target.error);
+                            reject(event.target.error);
+                        };
+                        reader.readAsText(blob);
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        reject(error);
+                    });
+            });
+        }
+
+        function convertLinkToName(link = "") {
+            let split = link.split("\\");
+            const filename = split[split.length - 1];
+            const dots = filename.split(".");
+            if (dots[dots.length - 1] !== "m3u8" && dots[dots.length - 1] !== "m3u") {
+                let name = "";
+                for (let i = 0; i < dots.length - 1; i++) {
+                    name += dots[i];
+                }
+                return name;
+            }
+            else {
+                console.log("list");
+                return filename;
+            }
+        }
+
+        function chopNameRaw(link = "", splitBy = '') {
+            let split = link.split(splitBy);
+            whatever = "";
+            for (let index = 0; index < split.length - 1; index++) {
+                const element = split[index];
+                whatever += element + splitBy;
+            }
+            return whatever;
+        }
+
+        function chopNameHTML(link = "", splitBy = '') {
+            let split = link.split(splitBy);
+            whatever = "";
+            for (let index = 0; index < split.length - 1; index++) {
+                const element = split[index];
+                if (element !== "..")
+                    whatever += "<span class=\"folder\">" + element + "</span> ";
+            }
+            return whatever;
+        }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+        function scrollToBottom() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: "smooth"
+            });
+        }
+
+        // globals
+        var globalList = [];
+        var playlist = [];
+        var selected = 0;
+
+        // player
+        async function getListM3U8(link = "") {
+            let list = ((await readFromFileURL(link)).split('\n')).filter((value) => { return value[0] !== '#' && value; });
+            list.splice(list.length - 1, 1);
+            let champ = chopNameRaw(link, '\\');
+            let finalList = [];
+            for (let i = 0; i < list.length; i++) {
+                finalList.push(champ + list[i]);
+            }
+            return finalList;
+        }
+
+        async function selectMusicToPlay(link = "") {
+            if (link.match(/.*\.m3u8/)) { // list
+                console.log("list");
+                playlist = await getListM3U8(link)
+                outputPlaylist(playlist);
+            }
+            else { // music
+                console.log(link);
+                let player = document.getElementById("player");
+                let name = document.getElementById("name");
+                let album = document.getElementById("album");
+
+                player.src = link;
+                name.innerText = convertLinkToName(link);
+                album.innerHTML = chopNameHTML(link, '\\');
+            }
+        }
+        function nextMusic(player) {
+            selected++;
+            if (selected < playlist.length) {
+                selectMusicToPlay(playlist[selected]);
+                document.getElementById("player").play();
+            }
+            else {
+                document.getElementById("player").src = "";
+            }
+        }
+        function setVolume() {
+            if (localStorage.getItem("volume"))
+                document.getElementById("player").volume = localStorage.getItem("volume");
+        }
+        function handleChangedVolume(player) {
+            let playerVolume = player.target.volume;
+            localStorage.setItem("volume", playerVolume);
+        }
+
+        document.getElementById("player").onvolumechange = handleChangedVolume;
+        document.getElementById("player").onended = nextMusic;
+
+        // choose randomly
+        function selectRandomMusic() {
+            selectMusicToPlay(globalList[getRandomInt(globalList.length)]);
+        }
+        document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
+
+        // next
+        document.getElementById("button_next").onclick = nextMusic;
+
+        // table
+        function setTable(rows) {
+            let table = document.getElementById("table_recommend_playlist_container");
+
+            for (let i = 0; i < 2; i++) {
+                let tr = document.createElement("tr");
+                for (let j = 0; j < rows; j++) {
+                    let td = document.createElement("td");
+                    td.onclick = handleClickToCell;
+                    tr.append(td);
+                }
+                table.append(tr);
+            }
+        }
+        function outputRecommends(list = []) {
+            let table = document.getElementById("table_recommend_playlist_container");
+            let colomn = table.getElementsByTagName("tr")[1];
+            colomn.innerHTML = "";
+
+            for (let i = 0; i < list.length; i++) {
+                let td = document.createElement("td");
+                td.onclick = handleClickToCell;
+                td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
+                td.value = list[i];
+
+                colomn.append(td);
+            }
+        }
+        function handleClickToCell(event) {
+            if (event.target.index !== undefined) {
+                selected = event.target.index;
+            }
+            else {
+                outputPlaylist();
+            }
+            selectMusicToPlay(event.target.value);
+            document.getElementById("player").play();
+        }
+        function outputPlaylist(list = []) {
+            let table = document.getElementById("table_recommend_playlist_container");
+            let colomn = table.getElementsByTagName("tr")[0];
+            colomn.innerHTML = "";
+
+            for (let i = 0; i < list.length; i++) {
+                let td = document.createElement("td");
+                td.onclick = handleClickToCell;
+                td.classList.add("playlist");
+                td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
+                td.value = list[i];
+                td.index = i;
+                colomn.append(td);
+            }
+        }
+
+
+        // end
+        (async () => {
+            globalList = (await readFromFileURL("./content.txt")).split("\n");
+            globalList.splice(globalList.length - 1, 1);
+            setTable(0);
+            setVolume();
+            outputRecommends(globalList);
+        })();
+    </script>
+
+</body>
+
+</html>

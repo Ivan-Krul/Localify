@@ -1,0 +1,4 @@
+..\..\Music\
+..\..\Games\DELTARUNE\mus\
+..\..\Games\Dwarf Fortress Classic\data\sound\
+..\..\Games\Undertale2\Audio\BGM\
