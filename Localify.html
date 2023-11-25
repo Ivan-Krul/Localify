@@ -22,7 +22,7 @@
         button {
             padding: 10px;
             font-size: 16px;
-            cursor:pointer;
+            cursor: pointer;
         }
 
         #player {
@@ -67,6 +67,11 @@
     <div id="current_player_container">
         <button id="button_chooseRandomly">Choose Randomly</button>
         <button id="button_next">Next</button>
+        <button id="button_push">Push to list</button>
+        <button id="button_pop">Pop from list</button>
+        <button id="button_clear">Clear list</button>
+        <button id="button_downloadPlaylist">Download playlist <span style="font-size: small;">(valid in directory with content.txt)</span></button>
+        
         <audio controls id="player"></audio>
 
         <div>
@@ -165,6 +170,7 @@
         }
 
         // globals
+        var current = 0
         var globalList = [];
         var playlist = [];
         var selected = 0;
@@ -172,7 +178,6 @@
         // player
         async function getListM3U8(link = "") {
             let list = ((await readFromFileURL(link)).split('\n')).filter((value) => { return value[0] !== '#' && value; });
-            list.splice(list.length - 1, 1);
             let champ = chopNameRaw(link, '\\');
             let finalList = [];
             for (let i = 0; i < list.length; i++) {
@@ -181,31 +186,43 @@
             return finalList;
         }
 
-        async function selectMusicToPlay(link = "") {
-            if (link.match(/.*\.m3u8/)) { // list
-                console.log("list");
-                playlist = await getListM3U8(link)
-                outputPlaylist(playlist);
-            }
-            else { // music
-                console.log(link);
-                let player = document.getElementById("player");
-                let name = document.getElementById("name");
-                let album = document.getElementById("album");
+        function setMusicToPlay() {
+            let set = "";
+            if (current === -1)
+                set = playlist[selected];
+            else
+                set = globalList[current];
 
-                player.src = link;
-                name.innerText = convertLinkToName(link);
-                album.innerHTML = chopNameHTML(link, '\\');
+            console.log(set);
+            let player = document.getElementById("player");
+            let name = document.getElementById("name");
+            let album = document.getElementById("album");
+
+            player.src = set;
+            name.innerText = convertLinkToName(set);
+            album.innerHTML = chopNameHTML(set, '\\');
+        }
+
+        async function selectMusicToPlay() {
+            if (current !== -1) { // because of safety
+                if (globalList[current].match(/.*\.m3u8/)) { // list
+                    console.log("list");
+                    playlist = await getListM3U8(globalList[current]);
+                    selected = 0;
+                    outputPlaylist(playlist);
+                }
+                else
+                    setMusicToPlay();
             }
+            else
+                setMusicToPlay();
         }
         function nextMusic(player) {
-            selected++;
-            if (selected < playlist.length) {
+            if (selected !== -1)
+                selected++;
+            if (selected < playlist.length && selected !== -1) {
                 selectMusicToPlay(playlist[selected]);
                 document.getElementById("player").play();
-            }
-            else {
-                document.getElementById("player").src = "";
             }
         }
         function setVolume() {
@@ -222,12 +239,60 @@
 
         // choose randomly
         function selectRandomMusic() {
-            selectMusicToPlay(globalList[getRandomInt(globalList.length)]);
+            current = getRandomInt(globalList.length);
+            selected = -1;
+            selectMusicToPlay();
+            document.getElementById("player").play();
         }
         document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
 
         // next
         document.getElementById("button_next").onclick = nextMusic;
+
+        // push to list
+        function pushToList() {
+            playlist.push(globalList[current]);
+            outputPlaylist(playlist);
+        }
+        document.getElementById("button_push").onclick = pushToList;
+
+        // pop from list
+        function popFromList() {
+            playlist.splice(selected, 1);
+            outputPlaylist(playlist);
+        }
+        document.getElementById("button_pop").onclick = popFromList;
+
+        // clear list
+        function clearList() {
+            playlist = [];
+            selected = -1;
+            outputPlaylist(playlist);
+        }
+        document.getElementById("button_clear").onclick = clearList;
+
+        // download playlist
+        function formM3U8() {
+            let resFile = "#EXTM3U\n"
+            playlist.forEach(element => {
+               resFile += "#EXFINF:1,<unknown> - "  + convertLinkToName(element) + '\n' + element + '\n';
+            });
+            return resFile;
+        }
+        function downloadPlaylist() {
+            // Convert the JSON object to a JSON string
+            const string = formM3U8();
+
+            // Create a Blob containing the JSON data
+            const blob = new Blob([string], { type: "text/plain" });
+
+            // Create a download link for the Blob
+            const downloadLink = document.createElement("a");
+            downloadLink.href = window.URL.createObjectURL(blob);
+            downloadLink.download = "playlist.m3u8"; // Specify the downloaded file name
+            downloadLink.click();
+        }
+        document.getElementById("button_downloadPlaylist").onclick = downloadPlaylist;
 
         // table
         function setTable(rows) {
@@ -243,6 +308,19 @@
                 table.append(tr);
             }
         }
+        function handleClickToCell(event) {
+            if (event.target.index !== undefined) {
+                selected = event.target.index;
+                current = -1;
+            }
+            else {
+                current = event.target.value;
+                selected = -1;
+            }
+
+            selectMusicToPlay();
+            document.getElementById("player").play();
+        }
         function outputRecommends(list = []) {
             let table = document.getElementById("table_recommend_playlist_container");
             let colomn = table.getElementsByTagName("tr")[1];
@@ -252,20 +330,10 @@
                 let td = document.createElement("td");
                 td.onclick = handleClickToCell;
                 td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
-                td.value = list[i];
+                td.value = i;
 
                 colomn.append(td);
             }
-        }
-        function handleClickToCell(event) {
-            if (event.target.index !== undefined) {
-                selected = event.target.index;
-            }
-            else {
-                outputPlaylist();
-            }
-            selectMusicToPlay(event.target.value);
-            document.getElementById("player").play();
         }
         function outputPlaylist(list = []) {
             let table = document.getElementById("table_recommend_playlist_container");
@@ -277,7 +345,6 @@
                 td.onclick = handleClickToCell;
                 td.classList.add("playlist");
                 td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
-                td.value = list[i];
                 td.index = i;
                 colomn.append(td);
             }
@@ -286,8 +353,11 @@
 
         // end
         (async () => {
-            globalList = (await readFromFileURL("./content.txt")).split("\n");
-            globalList.splice(globalList.length - 1, 1);
+            globalList = (await readFromFileURL("./content.txt"))
+                .split("\n")
+                .filter(function (element) {
+                    return element;
+                });
             setTable(0);
             setVolume();
             outputRecommends(globalList);
