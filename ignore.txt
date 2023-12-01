@@ -10,5 +10,7 @@
 .*\.png
 .*\.jpg
 .*\.kmz
+.*\.woff
+\.gitignore
 .*#.*
 .*\\a\\.*

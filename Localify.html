@@ -29,13 +29,9 @@
             width: 100%
         }
 
-        #table_recommend_playlist_container {
+        #table_recommend_container {
             width: 100%;
             background-color: #222;
-        }
-
-        .playlist {
-            background-color: #333;
         }
 
         .folder {
@@ -44,18 +40,34 @@
             color: black;
         }
 
-        #table_recommend_playlist_container tr {
+        .list tr {
             display: block;
             float: left;
         }
 
-        #table_recommend_playlist_container td {
+        .list td {
             display: block;
             padding: 0.5vw;
         }
 
-        #table_recommend_playlist_container tr td:hover {
+        .list tr td:hover {
             background-color: #444;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            min-height:10%;
+            max-height: 90%;
+            /* Set a higher z-index for the overlay */
+            overflow-y: auto;
+            /* Scrollability */
+        }
+
+        #current_player_container {
+            background-color: #333;
+            border: 2px solid #111;
         }
     </style>
 </head>
@@ -64,14 +76,15 @@
     <div id="title_container">
         <span>Localify</span>
     </div>
-    <div id="current_player_container">
+    <div id="current_player_container" class="overlay">
         <button id="button_chooseRandomly">Choose Randomly</button>
         <button id="button_next">Next</button>
         <button id="button_push">Push to list</button>
         <button id="button_pop">Pop from list</button>
         <button id="button_clear">Clear list</button>
-        <button id="button_downloadPlaylist">Download playlist <span style="font-size: small;">(valid in directory with content.txt)</span></button>
-        
+        <button id="button_downloadPlaylist">Download playlist <span style="font-size: small;">(valid in directory with
+                content.txt)</span></button>
+
         <audio controls id="player"></audio>
 
         <div>
@@ -83,9 +96,12 @@
             <label for="album">Album:&ThickSpace;&ThickSpace;</label>
             <span id="album"></span>
         </div>
+
+        <table id="table_playlist_container" class="list">
+        </table>
     </div>
 
-    <table id="table_recommend_playlist_container">
+    <table id="table_recommend_container" class="list">
     </table>
 
     <script>
@@ -275,7 +291,7 @@
         function formM3U8() {
             let resFile = "#EXTM3U\n"
             playlist.forEach(element => {
-               resFile += "#EXFINF:1,<unknown> - "  + convertLinkToName(element) + '\n' + element + '\n';
+                resFile += "#EXFINF:1,<unknown> - " + convertLinkToName(element) + '\n' + element + '\n';
             });
             return resFile;
         }
@@ -296,17 +312,25 @@
 
         // table
         function setTable(rows) {
-            let table = document.getElementById("table_recommend_playlist_container");
+            let tableRec = document.getElementById("table_recommend_container");
 
-            for (let i = 0; i < 2; i++) {
-                let tr = document.createElement("tr");
-                for (let j = 0; j < rows; j++) {
-                    let td = document.createElement("td");
-                    td.onclick = handleClickToCell;
-                    tr.append(td);
-                }
-                table.append(tr);
+            let tr = document.createElement("tr");
+            for (let j = 0; j < rows; j++) {
+                let td = document.createElement("td");
+                td.onclick = handleClickToCell;
+                tr.append(td);
             }
+            tableRec.append(tr);
+
+            let tablePl = document.getElementById("table_playlist_container");
+
+            tr = document.createElement("tr");
+            for (let j = 0; j < rows; j++) {
+                let td = document.createElement("td");
+                td.onclick = handleClickToCell;
+                tr.append(td);
+            }
+            tablePl.append(tr);
         }
         function handleClickToCell(event) {
             if (event.target.index !== undefined) {
@@ -322,8 +346,8 @@
             document.getElementById("player").play();
         }
         function outputRecommends(list = []) {
-            let table = document.getElementById("table_recommend_playlist_container");
-            let colomn = table.getElementsByTagName("tr")[1];
+            let table = document.getElementById("table_recommend_container");
+            let colomn = table.getElementsByTagName("tr")[0];
             colomn.innerHTML = "";
 
             for (let i = 0; i < list.length; i++) {
@@ -336,7 +360,7 @@
             }
         }
         function outputPlaylist(list = []) {
-            let table = document.getElementById("table_recommend_playlist_container");
+            let table = document.getElementById("table_playlist_container");
             let colomn = table.getElementsByTagName("tr")[0];
             colomn.innerHTML = "";
 
