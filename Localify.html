@@ -10,6 +10,7 @@
             background-color: #111;
             color: white;
             font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: small;
         }
 
         #title_container {
@@ -20,8 +21,8 @@
         }
 
         button {
-            padding: 10px;
-            font-size: 16px;
+            padding: 0.5vh;
+            font-size: 1vh;
             cursor: pointer;
         }
 
@@ -36,7 +37,7 @@
 
         .folder {
             background-color: #deb616;
-            font-size: 1.5ch;
+            font-size: 1ch;
             color: black;
         }
 
@@ -47,7 +48,10 @@
 
         .list td {
             display: block;
-            padding: 0.5vw;
+            padding-left: 0.5vw;
+            padding-right: 0.5vw;
+            padding-top: 0.25vw;
+            padding-bottom: 0.25vw;
         }
 
         .list tr td:hover {
@@ -60,9 +64,11 @@
             left: 50%;
             min-height:10%;
             max-height: 90%;
+			width: 45%;
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
+			padding: 5px;
         }
 
         #current_player_container {
