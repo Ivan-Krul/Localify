@@ -62,18 +62,23 @@
             position: fixed;
             top: 70px;
             left: 50%;
-            min-height:10%;
+            min-height: 10%;
             max-height: 90%;
-			width: 45%;
+            width: 45%;
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
-			padding: 5px;
+            padding: 5px;
         }
 
         #current_player_container {
             background-color: #333;
             border: 2px solid #111;
+        }
+
+        #equalizer_visualer {
+            width: 100%;
+            height: 20vh;
         }
     </style>
 </head>
@@ -83,14 +88,23 @@
         <span>Localify</span>
     </div>
     <div id="current_player_container" class="overlay">
+        <button id="button_previous">Previous</button>
         <button id="button_chooseRandomly">Choose Randomly</button>
         <button id="button_next">Next</button>
         <button id="button_push">Push to list</button>
         <button id="button_pop">Pop from list</button>
         <button id="button_clear">Clear list</button>
-        <button id="button_downloadPlaylist">Download playlist <span style="font-size: small;">(valid in directory with
-                content.txt)</span></button>
+        <button id="button_downloadPlaylist">Download playlist (valid in directory with
+            content.txt)</button>
+        <select id="select_eqRenderStage">
+            <option value="full">Full res EQ</option>
+            <option value="half">Half res EQ</option>
+            <option value="average x5">Average x5 res EQ</option>
+            <option value="simple">Simple res EQ</option>
+            <option value="no">Without EQ</option>
+        </select>
 
+        <canvas id="equalizer_visualer"></canvas>
         <audio controls id="player"></audio>
 
         <div>
@@ -191,11 +205,159 @@
             });
         }
 
+        // predecl
+        // render equalizer visualiser
+        // sources: https://codepen.io/nfj525/pen/rVBaab -> "JS Audio Visualizer" by "Nick Jones"
+        function Equalizer() {
+            this.context = new AudioContext();
+            this.src = this.context.createMediaElementSource(document.getElementById("player"));
+            this.analyser = this.context.createAnalyser();
+
+            this.eq_visualizer = document.getElementById("equalizer_visualer");
+            this.eq_visualizer.width = window.innerWidth;
+            this.eq_visualizer.height = window.innerHeight;
+            this.canvasContext = this.eq_visualizer.getContext("2d");
+
+            this.src.connect(this.analyser);
+            this.analyser.connect(this.context.destination);
+
+            this.analyser.fftSize = 256;
+
+            this.bufferLength = this.analyser.frequencyBinCount;
+            console.log("buffer length: " + this.bufferLength);
+
+            this.dataArray = new Uint8Array(this.bufferLength);
+
+            this.WIDTH = this.eq_visualizer.width;
+            this.HEIGHT = this.eq_visualizer.height;
+
+            this.barWidth = (this.WIDTH / this.bufferLength) * 1.25;
+            this.barHeight;
+            this.x = 0;
+            this.req = null;
+            this.checkStage();
+        }
+
+        Equalizer.prototype.getAnimationRequester = function () {
+            return this.req;
+        }
+
+        Equalizer.prototype.startFrame = function (collect = true) {
+            this.x = 0;
+
+            if (collect)
+                this.analyser.getByteFrequencyData(this.dataArray);
+
+            this.canvasContext.fillStyle = "#000";
+            this.canvasContext.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+        };
+
+        Equalizer.prototype.colorCanvasRectange = function (width) {
+            var r = this.barHeight / 1.5 + 20;
+            var g = this.barHeight / 1.5 + 20;
+            var b = this.barHeight / 1.5 + 20;
+
+            this.canvasContext.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+            this.canvasContext.fillRect(this.x, this.HEIGHT - this.barHeight * 3, this.barWidth * width, this.barHeight * 3);
+
+            this.x += this.barWidth * width - 1;
+        };
+
+        Equalizer.prototype.renderFullFrame = function () {
+            this.startFrame();
+
+            for (let i = 0; i < this.bufferLength * 0.8; i++) {
+                this.barHeight = this.dataArray[i];
+                this.colorCanvasRectange(1);
+            }
+        };
+
+        Equalizer.prototype.renderSemiFrame = function () {
+            this.startFrame();
+
+            for (let i = 0; i < this.bufferLength * 0.8; i += 2) {
+                this.barHeight = this.dataArray[i];
+                this.colorCanvasRectange(2);
+            }
+        };
+
+        Equalizer.prototype.renderAverageX5Frame = function () {
+            this.startFrame();
+
+            for (let i = 0; i < this.bufferLength * 0.8; i++) {
+                this.barHeight += this.dataArray[i];
+                if (i % 5 === 4) {
+                    this.barHeight /= 5;
+                    this.colorCanvasRectange(5);
+                    this.barHeight = 0;
+                }
+            }
+        };
+        Equalizer.prototype.renderSimpleFrame = function () {
+            this.startFrame();
+
+            var count = 0;
+
+            const border = 1;
+            var currentBorder = border;
+            this.barHeight = 0;
+
+            for (let i = 0; i < this.bufferLength * 0.8; i++) {
+                if (i < currentBorder && (i + 1) < this.bufferLength * 0.8) {
+                    this.barHeight += this.dataArray[i];
+                    count++;
+                }
+                else {
+                    this.barHeight /= count - i / 8;
+                    count = 0;
+                    this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+                    currentBorder = border + currentBorder * 10;
+                    this.barHeight = 0;
+                }
+
+            }
+        };
+        Equalizer.prototype.unpinAnimation = function () {
+            this.startFrame(false);
+        };
+        Equalizer.prototype.checkStage = function () {
+            //requestAnimationFrame(Equalizer.prototype.checkStage);
+
+            const self = this;
+            const func = () => {
+                var stage = document.getElementById("select_eqRenderStage").value;
+                switch (stage) {
+                    case "full":
+                        self.renderFullFrame();
+                        break;
+                    case "half":
+                        self.renderSemiFrame();
+                        break;
+                    case "average x5":
+                        self.renderAverageX5Frame();
+                        break;
+                    case "simple":
+                        self.renderSimpleFrame();
+                        break;
+                    case "no":
+                    default:
+                        self.unpinAnimation();
+                        break;
+                }
+                self.req = requestAnimationFrame(func);
+            }
+
+
+            func();
+        };
+
+
         // globals
         var current = 0
         var globalList = [];
         var playlist = [];
         var selected = 0;
+        var equalizer = new Equalizer();
 
         // player
         async function getListM3U8(link = "") {
@@ -223,6 +385,7 @@
             player.src = set;
             name.innerText = convertLinkToName(set);
             album.innerHTML = chopNameHTML(set, '\\');
+            //startRender();
         }
 
         async function selectMusicToPlay() {
@@ -247,6 +410,12 @@
                 document.getElementById("player").play();
             }
         }
+        function getCurrentMusicLink() {
+            if (current === -1)
+                return playlist[selected];
+            else
+                return globalList[current];
+        }
         function setVolume() {
             if (localStorage.getItem("volume"))
                 document.getElementById("player").volume = localStorage.getItem("volume");
@@ -258,6 +427,7 @@
 
         document.getElementById("player").onvolumechange = handleChangedVolume;
         document.getElementById("player").onended = nextMusic;
+        document.onplaying = equalizer.checkStage;
 
         // choose randomly
         function selectRandomMusic() {
@@ -268,8 +438,23 @@
         }
         document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
 
+        // eqRenderStage
+        //document.getElementById("select_eqRenderStage").onchange = 
+
+
         // next
         document.getElementById("button_next").onclick = nextMusic;
+
+        // previous
+        function previousMusic(player) {
+            if (selected !== -1)
+                selected--;
+            if (selected >= 0 && selected !== -1) {
+                selectMusicToPlay(playlist[selected]);
+                document.getElementById("player").play();
+            }
+        }
+        document.getElementById("button_previous").onclick = previousMusic;
 
         // push to list
         function pushToList() {
@@ -390,6 +575,7 @@
                 });
             setTable(0);
             setVolume();
+            equalizer.checkStage();
             outputRecommends(globalList);
         })();
     </script>
