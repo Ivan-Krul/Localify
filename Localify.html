@@ -78,7 +78,7 @@
 
         #equalizer_visualer {
             width: 100%;
-            height: 20vh;
+            height: 15vh;
         }
     </style>
 </head>
@@ -235,7 +235,7 @@
             this.barHeight;
             this.x = 0;
             this.req = null;
-            this.checkStage();
+            this.render = false;
         }
 
         Equalizer.prototype.getAnimationRequester = function () {
@@ -319,12 +319,16 @@
         };
         Equalizer.prototype.unpinAnimation = function () {
             this.startFrame(false);
+            this.render = false;
+        };
+        Equalizer.prototype.pinAnimation = function () {
+            this.render = true;
         };
         Equalizer.prototype.checkStage = function () {
             //requestAnimationFrame(Equalizer.prototype.checkStage);
 
             const self = this;
-            const func = () => {
+            const incheckStage = () => {
                 var stage = document.getElementById("select_eqRenderStage").value;
                 switch (stage) {
                     case "full":
@@ -344,11 +348,11 @@
                         self.unpinAnimation();
                         break;
                 }
-                self.req = requestAnimationFrame(func);
+                if(self.render)
+                    self.req = requestAnimationFrame(incheckStage);
             }
 
-
-            func();
+            incheckStage();
         };
 
 
@@ -439,7 +443,45 @@
         document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
 
         // eqRenderStage
-        //document.getElementById("select_eqRenderStage").onchange = 
+        function showCanvas() {
+            document.getElementById("equalizer_visualer").style.height = "20vh";
+        }
+        function hideCanvas() {
+            document.getElementById("equalizer_visualer").style.height = "1vh";
+        }
+        function initSelectorEQ() {
+            let stage = localStorage.getItem("EQ_render_mode");
+            let target = document.getElementById("select_eqRenderStage");
+            if(stage === undefined) {
+                target.value = "no";
+                localStorage.setItem("EQ_render_mode", "no");
+                hideCanvas();
+            }
+            else
+            {
+                if(stage !== "no") {
+                    equalizer.pinAnimation();
+                    showCanvas();
+                }
+                else {
+                    hideCanvas();
+                }
+                target.value = stage;
+            }
+        }
+        function checkStatus(target) {
+            let val = target.target.value;
+            localStorage.setItem("EQ_render_mode", val);
+            if(val !== "no")
+            {
+                showCanvas();
+                equalizer.pinAnimation();
+                equalizer.checkStage();
+            }
+            else
+                hideCanvas();
+        }
+        document.getElementById("select_eqRenderStage").onchange = checkStatus;
 
 
         // next
@@ -575,6 +617,7 @@
                 });
             setTable(0);
             setVolume();
+            initSelectorEQ();
             equalizer.checkStage();
             outputRecommends(globalList);
         })();
