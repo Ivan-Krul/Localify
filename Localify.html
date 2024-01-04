@@ -99,8 +99,10 @@
         <select id="select_eqRenderStage">
             <option value="full">Full res EQ</option>
             <option value="half">Half res EQ</option>
+			<option value="fifth">Fifth res EQ</option>
             <option value="average x5">Average x5 res EQ</option>
-            <option value="simple">Simple res EQ</option>
+            <option value="average 4">Average 4 res EQ</option>
+			<option value="only 3">Only 3 res EQ</option>
             <option value="no">Without EQ</option>
         </select>
 
@@ -281,6 +283,15 @@
             }
         };
 
+        Equalizer.prototype.renderFifthFrame = function () {
+            this.startFrame();
+
+            for (let i = 0; i < this.bufferLength * 0.8; i += 5) {
+                this.barHeight = this.dataArray[i];
+                this.colorCanvasRectange(5);
+            }
+        };
+
         Equalizer.prototype.renderAverageX5Frame = function () {
             this.startFrame();
 
@@ -293,7 +304,7 @@
                 }
             }
         };
-        Equalizer.prototype.renderSimpleFrame = function () {
+        Equalizer.prototype.renderAverage4Frame = function () {
             this.startFrame();
 
             var count = 0;
@@ -310,13 +321,27 @@
                 else {
                     this.barHeight /= count - i / 8;
                     count = 0;
-                    this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
-                    currentBorder = border + currentBorder * 10;
+                    this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 4));
+					if(border )
+                    currentBorder = border + currentBorder * 5;
                     this.barHeight = 0;
                 }
 
             }
         };
+		
+		
+        Equalizer.prototype.renderOnly3Frame = function () {
+            this.startFrame();
+
+			this.barHeight = this.dataArray[0];
+			this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+			this.barHeight = this.dataArray[3];
+			this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+			this.barHeight = this.dataArray[32];
+			this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+        };
+		
         Equalizer.prototype.unpinAnimation = function () {
             this.startFrame(false);
             this.render = false;
@@ -337,11 +362,17 @@
                     case "half":
                         self.renderSemiFrame();
                         break;
+					case "fifth":
+						self.renderFifthFrame();
+						break;
                     case "average x5":
                         self.renderAverageX5Frame();
                         break;
-                    case "simple":
-                        self.renderSimpleFrame();
+                    case "average 4":
+                        self.renderAverage4Frame();
+                        break;
+					case "only 3":
+                        self.renderOnly3Frame();
                         break;
                     case "no":
                     default:
