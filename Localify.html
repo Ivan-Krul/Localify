@@ -63,8 +63,8 @@
             top: 70px;
             left: 50%;
             min-height: 10%;
-            max-height: 90%;
-            width: 45%;
+            max-height: 87.5vh;
+            width: 47.5%;
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
@@ -78,7 +78,7 @@
 
         #equalizer_visualer {
             width: 100%;
-            height: 15vh;
+            height: 30vh;
         }
     </style>
 </head>
@@ -258,9 +258,10 @@
             var r = this.barHeight / 1.5 + 20;
             var g = this.barHeight / 1.5 + 20;
             var b = this.barHeight / 1.5 + 20;
+			const amplitude = 3.5;
 
             this.canvasContext.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-            this.canvasContext.fillRect(this.x, this.HEIGHT - this.barHeight * 3, this.barWidth * width, this.barHeight * 3);
+            this.canvasContext.fillRect(this.x, this.HEIGHT - this.barHeight * amplitude, this.barWidth * width, this.barHeight * amplitude);
 
             this.x += this.barWidth * width - 1;
         };
@@ -475,7 +476,7 @@
 
         // eqRenderStage
         function showCanvas() {
-            document.getElementById("equalizer_visualer").style.height = "20vh";
+            document.getElementById("equalizer_visualer").style.height = "30vh";
         }
         function hideCanvas() {
             document.getElementById("equalizer_visualer").style.height = "1vh";
@@ -503,13 +504,13 @@
         function checkStatus(target) {
             let val = target.target.value;
             localStorage.setItem("EQ_render_mode", val);
-            if(val !== "no")
+            if(val !== "no" && !equalizer.render)
             {
                 showCanvas();
                 equalizer.pinAnimation();
                 equalizer.checkStage();
             }
-            else
+            else if(equalizer.render && val === "no")
                 hideCanvas();
         }
         document.getElementById("select_eqRenderStage").onchange = checkStatus;
