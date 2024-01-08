@@ -88,6 +88,9 @@
         <span>Localify</span>
     </div>
     <div id="current_player_container" class="overlay">
+        <canvas id="equalizer_visualer"></canvas>
+        <audio controls id="player"></audio>
+
         <button id="button_previous">Previous</button>
         <button id="button_chooseRandomly">Choose Randomly</button>
         <button id="button_next">Next</button>
@@ -105,9 +108,6 @@
 			<option value="only 3">Only 3 res EQ</option>
             <option value="no">Without EQ</option>
         </select>
-
-        <canvas id="equalizer_visualer"></canvas>
-        <audio controls id="player"></audio>
 
         <div>
             <label for="name">Name:&ThickSpace;&ThickSpace;</label>
@@ -238,6 +238,8 @@
             this.x = 0;
             this.req = null;
             this.render = false;
+			this.scaleX = this.eq_visualizer.offsetWidth;
+			this.scaleY = this.eq_visualizer.offsetHeight;
         }
 
         Equalizer.prototype.getAnimationRequester = function () {
@@ -261,7 +263,7 @@
 			const amplitude = 3.5;
 
             this.canvasContext.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-            this.canvasContext.fillRect(this.x, this.HEIGHT - this.barHeight * amplitude, this.barWidth * width, this.barHeight * amplitude);
+            this.canvasContext.fillRect(this.x, this.HEIGHT - this.barHeight * amplitude * this.scaleY, this.barWidth * width, this.barHeight * amplitude * this.scaleY);
 
             this.x += this.barWidth * width - 1;
         };
@@ -323,7 +325,6 @@
                     this.barHeight /= count - i / 8;
                     count = 0;
                     this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 4));
-					if(border )
                     currentBorder = border + currentBorder * 5;
                     this.barHeight = 0;
                 }
@@ -352,6 +353,9 @@
         };
         Equalizer.prototype.checkStage = function () {
             //requestAnimationFrame(Equalizer.prototype.checkStage);
+
+			this.scaleX = this.eq_visualizer.offsetWidth / 912;
+			this.scaleY = this.eq_visualizer.offsetHeight / 276;
 
             const self = this;
             const incheckStage = () => {
