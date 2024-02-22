@@ -30,7 +30,7 @@
             width: 100%
         }
 
-        #table_recommend_container {
+        .recommend_container {
             width: 100%;
             background-color: #222;
         }
@@ -63,8 +63,34 @@
             top: 70px;
             left: 50%;
             min-height: 10%;
-            max-height: 87.5vh;
-            width: 47.5%;
+            height: 91vh;
+            width: 49%;
+            /* Set a higher z-index for the overlay */
+            overflow-y: auto;
+            /* Scrollability */
+            padding: 5px;
+        }
+
+        .recommend_overlay {
+            position: fixed;
+            top: 50%;
+            left: 0%;
+            min-height: 10vh;
+            max-height: 49vh;
+            width: 49vw;
+            /* Set a higher z-index for the overlay */
+            overflow-y: auto;
+            /* Scrollability */
+            padding: 5px;
+        }
+
+        .folder_overlay {
+            position: fixed;
+            top: 70px;
+            left: 0%;
+            min-height: 10vh;
+            max-height: 40vh;
+            width: 49%;
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
@@ -102,10 +128,10 @@
         <select id="select_eqRenderStage">
             <option value="full">Full res EQ</option>
             <option value="half">Half res EQ</option>
-			<option value="fifth">Fifth res EQ</option>
+            <option value="fifth">Fifth res EQ</option>
             <option value="average x5">Average x5 res EQ</option>
             <option value="average 4">Average 4 res EQ</option>
-			<option value="only 3">Only 3 res EQ</option>
+            <option value="only 3">Only 3 res EQ</option>
             <option value="no">Without EQ</option>
         </select>
 
@@ -123,8 +149,15 @@
         </table>
     </div>
 
-    <table id="table_recommend_container" class="list">
-    </table>
+    <div class="recommend_overlay">
+        <table id="table_recommend_container" class="list recommend_container">
+        </table>
+    </div>
+
+    <div class="folder_overlay">
+        <table id="table_folder_container" class="list recommend_container">
+        </table>
+    </div>
 
     <script>
         // main tools
@@ -238,8 +271,8 @@
             this.x = 0;
             this.req = null;
             this.render = false;
-			this.scaleX = this.eq_visualizer.offsetWidth;
-			this.scaleY = this.eq_visualizer.offsetHeight;
+            this.scaleX = this.eq_visualizer.offsetWidth;
+            this.scaleY = this.eq_visualizer.offsetHeight;
         }
 
         Equalizer.prototype.getAnimationRequester = function () {
@@ -260,7 +293,7 @@
             var r = this.barHeight / 1.5 + 20;
             var g = this.barHeight / 1.5 + 20;
             var b = this.barHeight / 1.5 + 20;
-			const amplitude = 3.5;
+            const amplitude = 3.5;
 
             this.canvasContext.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
             this.canvasContext.fillRect(this.x, this.HEIGHT - this.barHeight * amplitude * this.scaleY, this.barWidth * width, this.barHeight * amplitude * this.scaleY);
@@ -331,19 +364,19 @@
 
             }
         };
-		
-		
+
+
         Equalizer.prototype.renderOnly3Frame = function () {
             this.startFrame();
 
-			this.barHeight = this.dataArray[0];
-			this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
-			this.barHeight = this.dataArray[3];
-			this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
-			this.barHeight = this.dataArray[32];
-			this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+            this.barHeight = this.dataArray[0];
+            this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+            this.barHeight = this.dataArray[3];
+            this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+            this.barHeight = this.dataArray[32];
+            this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
         };
-		
+
         Equalizer.prototype.unpinAnimation = function () {
             this.startFrame(false);
             this.render = false;
@@ -354,8 +387,8 @@
         Equalizer.prototype.checkStage = function () {
             //requestAnimationFrame(Equalizer.prototype.checkStage);
 
-			this.scaleX = this.eq_visualizer.offsetWidth / 912;
-			this.scaleY = this.eq_visualizer.offsetHeight / 276;
+            this.scaleX = this.eq_visualizer.offsetWidth / 912;
+            this.scaleY = this.eq_visualizer.offsetHeight / 276;
 
             const self = this;
             const incheckStage = () => {
@@ -367,16 +400,16 @@
                     case "half":
                         self.renderSemiFrame();
                         break;
-					case "fifth":
-						self.renderFifthFrame();
-						break;
+                    case "fifth":
+                        self.renderFifthFrame();
+                        break;
                     case "average x5":
                         self.renderAverageX5Frame();
                         break;
                     case "average 4":
                         self.renderAverage4Frame();
                         break;
-					case "only 3":
+                    case "only 3":
                         self.renderOnly3Frame();
                         break;
                     case "no":
@@ -384,7 +417,7 @@
                         self.unpinAnimation();
                         break;
                 }
-                if(self.render)
+                if (self.render)
                     self.req = requestAnimationFrame(incheckStage);
             }
 
@@ -395,6 +428,7 @@
         // globals
         var current = 0
         var globalList = [];
+        var folderList = [];
         var playlist = [];
         var selected = 0;
         var equalizer = new Equalizer();
@@ -436,8 +470,10 @@
                     selected = 0;
                     outputPlaylist(playlist);
                 }
-                else
+                else {
                     setMusicToPlay();
+                    pushToList();
+                }
             }
             else
                 setMusicToPlay();
@@ -488,14 +524,13 @@
         function initSelectorEQ() {
             let stage = localStorage.getItem("EQ_render_mode");
             let target = document.getElementById("select_eqRenderStage");
-            if(stage === undefined) {
+            if (stage === undefined) {
                 target.value = "no";
                 localStorage.setItem("EQ_render_mode", "no");
                 hideCanvas();
             }
-            else
-            {
-                if(stage !== "no") {
+            else {
+                if (stage !== "no") {
                     equalizer.pinAnimation();
                     showCanvas();
                 }
@@ -508,13 +543,12 @@
         function checkStatus(target) {
             let val = target.target.value;
             localStorage.setItem("EQ_render_mode", val);
-            if(val !== "no" && !equalizer.render)
-            {
+            if (val !== "no" && !equalizer.render) {
                 showCanvas();
                 equalizer.pinAnimation();
                 equalizer.checkStage();
             }
-            else if(equalizer.render && val === "no")
+            else if (equalizer.render && val === "no")
                 hideCanvas();
         }
         document.getElementById("select_eqRenderStage").onchange = checkStatus;
@@ -579,9 +613,20 @@
         }
         document.getElementById("button_downloadPlaylist").onclick = downloadPlaylist;
 
+        // folders
+        function createFolderList() {
+            for (let i = 0; i < globalList.length; i++) {
+                let chopped = chopNameRaw(globalList[i], '\\');
+
+                if (folderList.findIndex((sth) => chopped === sth) === -1) {
+                    folderList.push(chopped);
+                }
+            }
+        }
+
         // table
-        function setTable(rows) {
-            let tableRec = document.getElementById("table_recommend_container");
+        function setTable(rows, instance) {
+            let tableRec = instance;
 
             let tr = document.createElement("tr");
             for (let j = 0; j < rows; j++) {
@@ -614,6 +659,47 @@
             selectMusicToPlay();
             document.getElementById("player").play();
         }
+        function selectElementsAndOutputIndexes(list, searchString) {
+            const indexes = [];
+            list.forEach((element, index) => {
+                if (element.indexOf(searchString) !== -1) {
+                    indexes.push(index);
+                }
+            });
+            return indexes;
+        }
+        function handleClickFolder(event) {
+            let folder = folderList[event.target.value];
+            let foldList = globalList.filter((sth)=>{return sth.includes(folder)});
+
+            outputPartionRecommends(foldList,selectElementsAndOutputIndexes(globalList, folder));
+        }
+        function foldAllFolders(list = []) {
+            let table = document.getElementById("table_folder_container");
+            let colomn = table.getElementsByTagName("tr")[0];
+            colomn.innerHTML = "";
+
+            for (let i = 0; i < list.length; i++) {
+                let td = document.createElement("td");
+                td.onclick = handleClickFolder;
+                td.innerHTML = chopNameHTML(list[i], '\\');
+                td.value = i;
+                colomn.append(td);
+            }
+        }
+        function outputPartionRecommends(list = [], indexes=[]) {
+            let table = document.getElementById("table_recommend_container");
+            let colomn = table.getElementsByTagName("tr")[0];
+            colomn.innerHTML = "";
+
+            for (let i = 0; i < list.length; i++) {
+                let td = document.createElement("td");
+                td.onclick = handleClickToCell;
+                td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
+                td.value = indexes[i];
+                colomn.append(td);
+            }
+        }
         function outputRecommends(list = []) {
             let table = document.getElementById("table_recommend_container");
             let colomn = table.getElementsByTagName("tr")[0];
@@ -624,7 +710,6 @@
                 td.onclick = handleClickToCell;
                 td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
                 td.value = i;
-
                 colomn.append(td);
             }
         }
@@ -651,10 +736,14 @@
                 .filter(function (element) {
                     return element;
                 });
-            setTable(0);
+            
+            setTable(0, document.getElementById("table_recommend_container"));
+            setTable(0, document.getElementById("table_folder_container"));
+            createFolderList();
             setVolume();
             initSelectorEQ();
             equalizer.checkStage();
+            foldAllFolders(folderList);
             outputRecommends(globalList);
         })();
     </script>
