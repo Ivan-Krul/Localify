@@ -7,6 +7,7 @@ Before entering to `Localify.html`
 -----------------
 
 You can set where should you search music in `pathToCheckItOut.txt`, or reducing target music files in `ignore.txt` and run `WritePathsToContent.ps1` for automatic detection and outputing `content.txt`, or you can fill it manually.
+Also you should **TURN OFF CORS IN YOUR BROWSER IN CASE OF USING OR DEVELOPING THIS REPOSITORY**
 
 Interface
 -----------------
