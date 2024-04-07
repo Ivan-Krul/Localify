@@ -20,14 +20,9 @@
             padding: 10px;
         }
 
-        button {
-            padding: 0.5vh;
-            font-size: 1vh;
-            cursor: pointer;
-        }
-
         #player {
-            width: 100%
+            width: 100%;
+            margin-bottom: 10px;
         }
 
         .recommend_container {
@@ -50,8 +45,9 @@
             display: block;
             padding-left: 0.5vw;
             padding-right: 0.5vw;
-            padding-top: 0.25vw;
-            padding-bottom: 0.25vw;
+            padding-top: 0.25ch;
+            padding-bottom: 0.25ch;
+            min-width: 47.5vw;
         }
 
         .list tr td:hover {
@@ -59,12 +55,6 @@
         }
 
         .overlay {
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            min-height: 10%;
-            height: 91vh;
-            width: 49%;
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
@@ -72,12 +62,6 @@
         }
 
         .recommend_overlay {
-            position: fixed;
-            bottom: 1px;
-            left: 0%;
-            min-height: 10vh;
-            max-height: 40vh;
-            width: 49vw;
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
@@ -85,12 +69,6 @@
         }
 
         .folder_overlay {
-            position: fixed;
-            top: 70px;
-            left: 0%;
-            min-height: 10vh;
-            max-height: 40vh;
-            width: 49%;
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
@@ -106,6 +84,57 @@
             width: 100%;
             height: 30vh;
         }
+
+        .content_container {
+            max-height: calc(100vh - 70px);
+        }
+
+        @media screen and (max-width: 700px) {
+            #button_scrollUp {
+                position: fixed;
+                z-index: 1;
+                bottom: 5%;
+                right: 5%;
+            }
+
+            button {
+                padding:5px;
+                margin: 5px;
+            }
+        }
+
+        @media screen and (min-width: 700px) {
+            #button_scrollUp {
+                display: none;
+            }
+
+            .overlay {
+                position: fixed;
+                top: 70px;
+                left: 50%;
+                min-height: 10%;
+                height: calc(100vh - 25px);
+                width: 49%;
+
+            }
+
+            .recommend_overlay {
+                position: fixed;
+                top: calc(40vh + 25px + 70px);
+                left: 0%;
+                height: calc(40vh);
+                width: 49vw;
+            }
+
+            .folder_overlay {
+                position: fixed;
+                top: 70px;
+                left: 0%;
+                min-height: 10vh;
+                max-height: 40vh;
+                width: 49vw;
+            }
+        }
     </style>
 </head>
 
@@ -113,50 +142,52 @@
     <div id="title_container">
         <span>Localify</span>
     </div>
-    <div id="current_player_container" class="overlay">
-        <canvas id="equalizer_visualer"></canvas>
-        <audio controls id="player"></audio>
+    <div class="content_container">
+        <div id="current_player_container" class="overlay">
+            <canvas id="equalizer_visualer"></canvas>
+            <audio controls id="player"></audio>
 
-        <button id="button_previous">Previous</button>
-        <button id="button_chooseRandomly">Choose Randomly</button>
-        <button id="button_next">Next</button>
-        <button id="button_push">Push to list</button>
-        <button id="button_pop">Pop from list</button>
-        <button id="button_clear">Clear list</button>
-        <button id="button_downloadPlaylist">Download playlist (valid in directory with
-            content.txt)</button>
-        <select id="select_eqRenderStage">
-            <option value="full">Full res EQ</option>
-            <option value="half">Half res EQ</option>
-            <option value="fifth">Fifth res EQ</option>
-            <option value="average x5">Average x5 res EQ</option>
-            <option value="average 4">Average 4 res EQ</option>
-            <option value="only 3">Only 3 res EQ</option>
-            <option value="no">Without EQ</option>
-        </select>
+            <button id="button_previous">Previous</button>
+            <button id="button_chooseRandomly">Choose Randomly</button>
+            <button id="button_next">Next</button>
+            <button id="button_push">Push to list</button>
+            <button id="button_pop">Pop from list</button>
+            <button id="button_clear">Clear list</button>
+            <button id="button_downloadPlaylist">Download playlist (valid in directory with
+                content.txt)</button>
+            <select id="select_eqRenderStage">
+                <option value="full">Full res EQ</option>
+                <option value="half">Half res EQ</option>
+                <option value="fifth">Fifth res EQ</option>
+                <option value="average x5">Average x5 res EQ</option>
+                <option value="average 4">Average 4 res EQ</option>
+                <option value="only 3">Only 3 res EQ</option>
+                <option value="no">Without EQ</option>
+            </select>
 
-        <div>
-            <label for="name">Name:&ThickSpace;&ThickSpace;</label>
-            <span id="name"></span>
+            <div>
+                <label for="name">Name:&ThickSpace;&ThickSpace;</label>
+                <span id="name"></span>
+            </div>
+
+            <div>
+                <label for="album">Album:&ThickSpace;&ThickSpace;</label>
+                <span id="album"></span>
+            </div>
+
+            <table id="table_playlist_container" class="list">
+            </table>
+        </div>
+        <div class="folder_overlay">
+            <table id="table_folder_container" class="list recommend_container">
+            </table>
+        </div>
+        <div class="recommend_overlay">
+            <table id="table_recommend_container" class="list recommend_container">
+            </table>
         </div>
 
-        <div>
-            <label for="album">Album:&ThickSpace;&ThickSpace;</label>
-            <span id="album"></span>
-        </div>
-
-        <table id="table_playlist_container" class="list">
-        </table>
-    </div>
-
-    <div class="recommend_overlay">
-        <table id="table_recommend_container" class="list recommend_container">
-        </table>
-    </div>
-
-    <div class="folder_overlay">
-        <table id="table_folder_container" class="list recommend_container">
-        </table>
+        <button id="button_scrollUp">Scroll up</button>
     </div>
 
     <script>
@@ -189,7 +220,7 @@
         }
 
         function convertLinkToName(link = "") {
-            let split = link.split("\\");
+            let split = link.split(directorySeparation);
             const filename = split[split.length - 1];
             const dots = filename.split(".");
             if (dots[dots.length - 1] !== "m3u8" && dots[dots.length - 1] !== "m3u") {
@@ -432,11 +463,12 @@
         var playlist = [];
         var selected = 0;
         var equalizer = new Equalizer();
+        const directorySeparation = '\\';
 
         // player
         async function getListM3U8(link = "") {
             let list = ((await readFromFileURL(link)).split('\n')).filter((value) => { return value[0] !== '#' && value; });
-            let champ = chopNameRaw(link, '\\');
+            let champ = chopNameRaw(link, directorySeparation);
             let finalList = [];
             for (let i = 0; i < list.length; i++) {
                 finalList.push(champ + list[i]);
@@ -458,7 +490,7 @@
 
             player.src = set;
             name.innerText = convertLinkToName(set);
-            album.innerHTML = chopNameHTML(set, '\\');
+            album.innerHTML = chopNameHTML(set, directorySeparation);
             //startRender();
         }
 
@@ -616,7 +648,7 @@
         // folders
         function createFolderList() {
             for (let i = 0; i < globalList.length; i++) {
-                let chopped = chopNameRaw(globalList[i], '\\');
+                let chopped = chopNameRaw(globalList[i], directorySeparation);
 
                 if (folderList.findIndex((sth) => chopped === sth) === -1) {
                     folderList.push(chopped);
@@ -670,9 +702,9 @@
         }
         function handleClickFolder(event) {
             let folder = folderList[event.target.value];
-            let foldList = globalList.filter((sth)=>{return sth.includes(folder)});
+            let foldList = globalList.filter((sth) => { return sth.includes(folder) });
 
-            outputPartionRecommends(foldList,selectElementsAndOutputIndexes(globalList, folder));
+            outputPartionRecommends(foldList, selectElementsAndOutputIndexes(globalList, folder));
         }
         function foldAllFolders(list = []) {
             let table = document.getElementById("table_folder_container");
@@ -682,12 +714,12 @@
             for (let i = 0; i < list.length; i++) {
                 let td = document.createElement("td");
                 td.onclick = handleClickFolder;
-                td.innerHTML = chopNameHTML(list[i], '\\');
+                td.innerHTML = chopNameHTML(list[i], directorySeparation);
                 td.value = i;
                 colomn.append(td);
             }
         }
-        function outputPartionRecommends(list = [], indexes=[]) {
+        function outputPartionRecommends(list = [], indexes = []) {
             let table = document.getElementById("table_recommend_container");
             let colomn = table.getElementsByTagName("tr")[0];
             colomn.innerHTML = "";
@@ -695,7 +727,7 @@
             for (let i = 0; i < list.length; i++) {
                 let td = document.createElement("td");
                 td.onclick = handleClickToCell;
-                td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
+                td.innerHTML = chopNameHTML(list[i], directorySeparation) + convertLinkToName(list[i]);
                 td.value = indexes[i];
                 colomn.append(td);
             }
@@ -708,7 +740,7 @@
             for (let i = 0; i < list.length; i++) {
                 let td = document.createElement("td");
                 td.onclick = handleClickToCell;
-                td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
+                td.innerHTML = chopNameHTML(list[i], directorySeparation) + convertLinkToName(list[i]);
                 td.value = i;
                 colomn.append(td);
             }
@@ -722,12 +754,14 @@
                 let td = document.createElement("td");
                 td.onclick = handleClickToCell;
                 td.classList.add("playlist");
-                td.innerHTML = chopNameHTML(list[i], '\\') + convertLinkToName(list[i]);
+                td.innerHTML = chopNameHTML(list[i], directorySeparation) + convertLinkToName(list[i]);
                 td.index = i;
                 colomn.append(td);
             }
         }
 
+        // scroll up
+        document.getElementById("button_scrollUp").onclick = scrollToTop;
 
         // end
         (async () => {
@@ -736,7 +770,7 @@
                 .filter(function (element) {
                     return element;
                 });
-            
+
             setTable(0, document.getElementById("table_recommend_container"));
             setTable(0, document.getElementById("table_folder_container"));
             createFolderList();
