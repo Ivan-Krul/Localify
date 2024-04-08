@@ -65,14 +65,14 @@
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
-            padding: 5px;
+            margin: 5px;
         }
 
         .folder_overlay {
             /* Set a higher z-index for the overlay */
             overflow-y: auto;
             /* Scrollability */
-            padding: 5px;
+            margin: 5px;
         }
 
         #current_player_container {
@@ -86,7 +86,11 @@
         }
 
         .content_container {
-            max-height: calc(100vh - 70px);
+            height: calc(100vh - 70px);
+        }
+
+        .overlay {
+            overflow-x: hidden;
         }
 
         @media screen and (max-width: 700px) {
@@ -98,7 +102,12 @@
             }
 
             button {
-                padding:5px;
+                padding: 5px;
+                margin: 5px;
+            }
+
+            select {
+                padding: 5px;
                 margin: 5px;
             }
         }
@@ -110,29 +119,36 @@
 
             .overlay {
                 position: fixed;
-                top: 70px;
                 left: 50%;
-                min-height: 10%;
-                height: calc(100vh - 25px);
-                width: 49%;
-
+                height: calc(100vh - 90px);
+                width: 48%;
             }
 
             .recommend_overlay {
                 position: fixed;
-                top: calc(40vh + 25px + 70px);
                 left: 0%;
-                height: calc(40vh);
+                height: calc(50vh - 20px);
                 width: 49vw;
             }
 
             .folder_overlay {
                 position: fixed;
-                top: 70px;
                 left: 0%;
                 min-height: 10vh;
-                max-height: 40vh;
+                max-height: calc(50vh - 70px);
                 width: 49vw;
+            }
+
+            .overlay {
+                top: 70px;
+            }
+
+            .recommend_overlay {
+                bottom: 0%;
+            }
+
+            .folder_overlay {
+                top: 70px;
             }
         }
     </style>
@@ -178,13 +194,15 @@
             <table id="table_playlist_container" class="list">
             </table>
         </div>
-        <div class="folder_overlay">
-            <table id="table_folder_container" class="list recommend_container">
-            </table>
-        </div>
-        <div class="recommend_overlay">
-            <table id="table_recommend_container" class="list recommend_container">
-            </table>
+        <div>
+            <div class="folder_overlay">
+                <table id="table_folder_container" class="list recommend_container">
+                </table>
+            </div>
+            <div class="recommend_overlay">
+                <table id="table_recommend_container" class="list recommend_container">
+                </table>
+            </div>
         </div>
 
         <button id="button_scrollUp">Scroll up</button>
@@ -244,6 +262,11 @@
                 whatever += element + splitBy;
             }
             return whatever;
+        }
+
+        function chopLocDirRaw(link = "", splitBy = '') {
+            let split = link.split(splitBy);
+            return split[split.length - 2];
         }
 
         function chopNameHTML(link = "", splitBy = '') {
@@ -624,9 +647,10 @@
 
         // download playlist
         function formM3U8() {
-            let resFile = "#EXTM3U\n"
-            playlist.forEach(element => {
-                resFile += "#EXFINF:1,<unknown> - " + convertLinkToName(element) + '\n' + element + '\n';
+            let resFile = "#EXTM3U\n";
+
+            playlist.forEach(element => {   
+                resFile += `#EXFINF:1,${chopLocDirRaw(element, directorySeparation)} - ${convertLinkToName(element)}\nelement\n`;
             });
             return resFile;
         }
