@@ -538,7 +538,7 @@
                 selected++;
             if (selected < playlist.length && selected !== -1) {
                 selectMusicToPlay(playlist[selected]);
-                Equalizer.AudioContext.resume();
+                Equalizer.context.resume();
                 document.getElementById("player").play();
             }
         }
@@ -566,7 +566,7 @@
             current = getRandomInt(globalList.length);
             selected = -1;
             selectMusicToPlay();
-            Equalizer.AudioContext.resume();
+            Equalizer.context.resume();
             document.getElementById("player").play();
         }
         document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
@@ -620,7 +620,7 @@
                 selected--;
             if (selected >= 0 && selected !== -1) {
                 selectMusicToPlay(playlist[selected]);
-                Equalizer.AudioContext.resume();
+                Equalizer.context.resume();
                 document.getElementById("player").play();
             }
         }
@@ -716,7 +716,7 @@
             }
 
             selectMusicToPlay();
-            Equalizer.AudioContext.resume();
+            Equalizer.context.resume();
             document.getElementById("player").play();
         }
         function selectElementsAndOutputIndexes(list, searchString) {
