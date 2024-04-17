@@ -649,26 +649,65 @@
         document.getElementById("button_clear").onclick = clearList;
 
         // download playlist
+        function getSongDurations(songLinks) {
+            let totalDuration = [];
+            let promises = [];
+
+            songLinks.forEach(link => {
+                let audio = new Audio();
+
+                audio.src = link;
+
+                let promise = new Promise((resolve, reject) => {
+                    audio.onloadedmetadata = () => {
+                        totalDuration.push(audio.duration);
+                        resolve();
+                    };
+
+                    audio.onerror = () => {
+                        reject(`Error loading ${link}`);
+                    };
+                });
+
+                promises.push(promise);
+
+                audio.load();
+            });
+
+            return Promise.all(promises).then(() => {
+                return totalDuration;
+            });
+        }
         function formM3U8() {
             let resFile = "#EXTM3U\n";
+            let leng = [];
 
-            playlist.forEach(element => {   
-                resFile += `#EXFINF:1,${chopLocDirRaw(element, directorySeparation)} - ${convertLinkToName(element)}\nelement\n`;
-            });
-            return resFile;
+            return getSongDurations(playlist)
+                .then(totalDuration => {
+                    for (let i = 0; i < playlist.length; i++) {
+                        resFile += `#EXFINF:${Math.ceil(totalDuration[i])},${chopLocDirRaw(playlist[i], directorySeparation)} - ${convertLinkToName(playlist[i])}\n${playlist[i]}\n`;
+                    }
+
+                    return resFile;
+                })
+                .catch(error => {
+                    throw error;
+                });
         }
+
         function downloadPlaylist() {
-            // Convert the JSON object to a JSON string
-            const string = formM3U8();
+            formM3U8()
+                .then(str => {
+                    const blob = new Blob([str], { type: "text/plain" });
 
-            // Create a Blob containing the JSON data
-            const blob = new Blob([string], { type: "text/plain" });
-
-            // Create a download link for the Blob
-            const downloadLink = document.createElement("a");
-            downloadLink.href = window.URL.createObjectURL(blob);
-            downloadLink.download = "playlist.m3u8"; // Specify the downloaded file name
-            downloadLink.click();
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = window.URL.createObjectURL(blob);
+                    downloadLink.download = "playlist.m3u8"; // Specify the downloaded file name
+                    downloadLink.click();
+                })
+                .catch(error => {
+                    console.error(error);
+                });
         }
         document.getElementById("button_downloadPlaylist").onclick = downloadPlaylist;
 
