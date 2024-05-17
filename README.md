@@ -23,4 +23,4 @@ Compatatility
 ----------------
 
 You can already use Localify if you're in Windows.
-It requires some tweaks to use it in Linux, MacOS or Server-side(soon) computers.
+It requires .sh script to use it in Linux, MacOS or Server-side computers.
