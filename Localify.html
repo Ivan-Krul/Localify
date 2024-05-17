@@ -4,155 +4,179 @@
 <head>
     <title>Localify</title>
     <meta charset="UTF-8" />
+</head>
 
-    <style>
-        body {
-            background-color: #111;
-            color: white;
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
-            font-size: small;
+<style>
+    @font-face {
+        font-family: "Roboto Medium";
+        src: url("./Roboto-Medium.ttf");
+    }
+
+    @font-face {
+        font-family: "Roboto Regular";
+        src: url("./Roboto-Regular.ttf");
+    }
+
+    @font-face {
+        font-family: "Roboto Light";
+        src: url("./Roboto-Light.ttf");
+    }
+
+    body {
+        background-color: #111;
+        color: white;
+        font-family: "Roboto Regular";
+        font-size: small;
+    }
+
+    #title_container {
+        background-color: #008000;
+        text-align: center;
+        font-size: 200%;
+        padding: 10px;
+        font-family: "Roboto Medium";
+        border: none;
+        border-radius: 10px;
+        margin-bottom: 5px;
+    }
+
+    select, button {
+        font-family: "Roboto Regular";
+        margin: 2px;
+        padding: 5px;
+        padding-left: 10px;
+        padding-right: 10px;
+		border-radius: 10px;
+        border: none;
+    }
+
+    label {
+        font-family: "Roboto Light";
+    }
+
+    #player {
+        width: 100%;
+        margin-bottom: 10px;
+        border: none;
+        border-radius: 5px;
+    }
+
+    .recommend_container {
+        width: 100%;
+        background-color: #222;
+    }
+
+    .folder {
+        background-color: #deb616;
+        font-family: "Roboto Light";
+        font-size: 1.5ch;
+        padding-bottom: 1px;
+        padding-top: 1px;
+        padding-left: 2px;
+        padding-right: 2px;
+        color: black;
+    }
+
+    .list tr {
+        display: block;
+        float: left;
+    }
+
+    .list td {
+        display: block;
+        padding-left: 0.5vw;
+        padding-right: 0.5vw;
+        padding-top: 0.25ch;
+        padding-bottom: 0.25ch;
+        min-width: 47.5vw;
+    }
+
+    .list tr td:hover {
+        background-color: #444;
+    }
+
+    .overlay {
+        overflow-y: auto;
+        padding: 5px;
+    }
+
+    .recommend_overlay {
+        overflow-y: auto;
+        margin: 5px;
+    }
+
+    .folder_overlay {
+        overflow-y: auto;
+        margin: 5px;
+    }
+
+    #current_player_container {
+        background-color: #333;
+        margin-top: 5px;
+    }
+
+    #equalizer_visualer {
+        width: 100%;
+        height: 30vh;
+    }
+
+    .content_container {
+        height: calc(100vh - 75px);
+    }
+
+    .overlay {
+        overflow-x: hidden;
+    }
+
+    @media screen and (max-aspect-ratio: 1/1) {
+        #button_scrollUp {
+            position: fixed;
+            z-index: 1;
+            bottom: 5%;
+            right: 5%;
         }
+    }
 
-        #title_container {
-            background-color: #008000;
-            text-align: center;
-            font-size: 200%;
-            padding: 10px;
-        }
-
-        #player {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        .recommend_container {
-            width: 100%;
-            background-color: #222;
-        }
-
-        .folder {
-            background-color: #deb616;
-            font-size: 1ch;
-            color: black;
-        }
-
-        .list tr {
-            display: block;
-            float: left;
-        }
-
-        .list td {
-            display: block;
-            padding-left: 0.5vw;
-            padding-right: 0.5vw;
-            padding-top: 0.25ch;
-            padding-bottom: 0.25ch;
-            min-width: 47.5vw;
-        }
-
-        .list tr td:hover {
-            background-color: #444;
+    @media screen and (min-aspect-ratio: 1/1) {	
+        #button_scrollUp {
+            display: none;
         }
 
         .overlay {
-            /* Set a higher z-index for the overlay */
-            overflow-y: auto;
-            /* Scrollability */
-            padding: 5px;
+            position: fixed;
+            right: 5px;
+            height: calc(100vh - 90px);
+            width: calc(50vw - 20px);
         }
 
         .recommend_overlay {
-            /* Set a higher z-index for the overlay */
-            overflow-y: auto;
-            /* Scrollability */
-            margin: 5px;
+            position: fixed;
+            left: 5px;
+            height: calc(50vh - 20px);
+            width: calc(50vw - 20px);
         }
 
         .folder_overlay {
-            /* Set a higher z-index for the overlay */
-            overflow-y: auto;
-            /* Scrollability */
-            margin: 5px;
-        }
-
-        #current_player_container {
-            background-color: #333;
-            border: 2px solid #111;
-        }
-
-        #equalizer_visualer {
-            width: 100%;
-            height: 30vh;
-        }
-
-        .content_container {
-            height: calc(100vh - 70px);
+            position: fixed;
+            left: 5px;
+            min-height: 10vh;
+            max-height: calc(50vh - 70px);
+            width: calc(50vw - 20px);
         }
 
         .overlay {
-            overflow-x: hidden;
+            top: 70px;
         }
 
-        @media screen and (max-aspect-ratio: 1/1) {
-            #button_scrollUp {
-                position: fixed;
-                z-index: 1;
-                bottom: 5%;
-                right: 5%;
-            }
-
-            button {
-                padding: 5px;
-                margin: 5px;
-            }
-
-            select {
-                padding: 5px;
-                margin: 5px;
-            }
+        .recommend_overlay {
+            bottom: 0%;
         }
 
-        @media screen and (min-aspect-ratio: 1/1) {
-            #button_scrollUp {
-                display: none;
-            }
-
-            .overlay {
-                position: fixed;
-                left: 50%;
-                height: calc(100vh - 90px);
-                width: 48%;
-            }
-
-            .recommend_overlay {
-                position: fixed;
-                left: 0%;
-                height: calc(50vh - 20px);
-                width: 49vw;
-            }
-
-            .folder_overlay {
-                position: fixed;
-                left: 0%;
-                min-height: 10vh;
-                max-height: calc(50vh - 70px);
-                width: 49vw;
-            }
-
-            .overlay {
-                top: 70px;
-            }
-
-            .recommend_overlay {
-                bottom: 0%;
-            }
-
-            .folder_overlay {
-                top: 70px;
-            }
+        .folder_overlay {
+            top: 70px;
         }
-    </style>
-</head>
+    }
+</style>
 
 <body>
     <div id="title_container">
@@ -169,8 +193,7 @@
             <button id="button_push">Push to list</button>
             <button id="button_pop">Pop from list</button>
             <button id="button_clear">Clear list</button>
-            <button id="button_downloadPlaylist">Download playlist (valid in directory with
-                content.txt)</button>
+            <button id="button_downloadPlaylist">Download playlist (in content.txt)</button>
             <select id="select_eqRenderStage">
                 <option value="full">Full res EQ</option>
                 <option value="half">Half res EQ</option>
@@ -180,6 +203,7 @@
                 <option value="only 3">Only 3 res EQ</option>
                 <option value="no">Without EQ</option>
             </select>
+            <button id="button_recordEQ">Record EQ</button>
 
             <div>
                 <label for="name">Name:&ThickSpace;&ThickSpace;</label>
@@ -444,6 +468,8 @@
             this.scaleX = this.eq_visualizer.offsetWidth / 912;
             this.scaleY = this.eq_visualizer.offsetHeight / 276;
 
+
+
             const self = this;
             const incheckStage = () => {
                 var stage = document.getElementById("select_eqRenderStage").value;
@@ -471,9 +497,16 @@
                         self.unpinAnimation();
                         break;
                 }
+                if (eqRecord) {
+                    self.eq_visualizer.toBlob((blob) => {
+                        arrauEqRecord.push(blob);
+                        console.log(arrauEqRecord.length);
+                    })
+                }
                 if (self.render)
                     self.req = requestAnimationFrame(incheckStage);
             }
+
 
             incheckStage();
         };
@@ -486,6 +519,11 @@
         var playlist = [];
         var selected = 0;
         var equalizer = new Equalizer();
+        var eqRecord = false;
+        var arrauEqRecord = [];
+
+        const inWebMode = true;
+
         const directorySeparation = '/';
 
         // player
@@ -678,6 +716,33 @@
                 return totalDuration;
             });
         }
+        function convertMusicLinkToWeb(pathMusic = "") {
+            let path = window.location.href;
+
+            let slash = path.lastIndexOf('/');
+            if(slash === path.length - 1) {
+                path = path.substring(0, slash);
+                slash = path.lastIndexOf('/');
+            }
+
+            path = path.substring(0, slash);
+
+            let dot = pathMusic.indexOf("./");
+            
+            if(dot !== -1 && dot === 0) {
+                pathMusic = pathMusic.substring(3);
+            }
+
+            let dotdot = pathMusic.indexOf("../");
+            while(dotdot !== -1) {
+                slash = path.lastIndexOf('/');
+                path = path.substring(0, slash);
+
+                pathMusic = pathMusic.substring(dotdot + 3);
+                dotdot = pathMusic.indexOf("../");
+            }
+            return `${path}/${pathMusic}`;
+        }
         function formM3U8() {
             let resFile = "#EXTM3U\n";
             let leng = [];
@@ -685,7 +750,7 @@
             return getSongDurations(playlist)
                 .then(totalDuration => {
                     for (let i = 0; i < playlist.length; i++) {
-                        resFile += `#EXFINF:${Math.ceil(totalDuration[i])},${chopLocDirRaw(playlist[i], directorySeparation)} - ${convertLinkToName(playlist[i])}\n${playlist[i]}\n`;
+                        resFile += `#EXFINF:${Math.ceil(totalDuration[i])},${chopLocDirRaw(playlist[i], directorySeparation)} - ${convertLinkToName(playlist[i])}\n${ inWebMode ? convertMusicLinkToWeb(playlist[i]) : playlist[i]}\n`;
                     }
 
                     return resFile;
@@ -710,6 +775,36 @@
                 });
         }
         document.getElementById("button_downloadPlaylist").onclick = downloadPlaylist;
+
+        // record EQ
+        function handleDownloadPartion(beg, end, name) {
+            const downloadLink = document.createElement('a');
+
+            for (let i = beg; i < Math.min(end, arrauEqRecord.length); i++) {
+                downloadLink.href = URL.createObjectURL(arrauEqRecord[i]);
+                downloadLink.download = `${name} ${i}.png`;
+                downloadLink.click();
+                URL.revokeObjectURL(arrauEqRecord[i]);
+            }
+        }
+        function handleEndRecords() {
+            document.getElementById("player").onended = nextMusic;
+            eqRecord = false;
+
+            const downloadLink = document.createElement('a');
+
+            for (let i = 0; i < arrauEqRecord.length; i += 15) {
+                setTimeout(handleDownloadPartion, 3000 * Math.floor(i / 15), i, i + 15, "EQRecord");
+            }
+        }
+        function startRecordingEQ() {
+            document.getElementById("player").onended = handleEndRecords;
+            arrauEqRecord = [];
+            document.getElementById("player").currentTime = 0;
+            document.getElementById("player").play();
+            eqRecord = true;
+        }
+        document.getElementById("button_recordEQ").onclick = startRecordingEQ;
 
         // folders
         function createFolderList() {

@@ -108,11 +108,14 @@ $files = Parse-Ignore "ignore.txt" $allFiles
 New-Item "content.txt" -Force
 
 $totalSize = 0
+$filePath = ""
 foreach($file in $files)
 {
     $prop = Get-Item $file
     $totalSize += $prop.Length
-    $file >> "content.txt"
+
+	$resFilePath = $file -replace "\\", "/"
+	$resFilePath >> "content.txt"
 }
 
 Write-FileSize $totalSize

@@ -12,6 +12,7 @@
 .*\.kmz
 .*\.woff
 .*\.md
+.*\.ttf
 \.gitignore
 .*#.*
 .*\\a\\.*
