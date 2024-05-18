@@ -4,6 +4,7 @@
 <head>
     <title>Localify</title>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 
 <style>
@@ -38,15 +39,21 @@
         border: none;
         border-radius: 10px;
         margin-bottom: 5px;
+
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        width: calc(100vw - 40px);
     }
 
-    select, button {
+    select,
+    button {
         font-family: "Roboto Regular";
         margin: 2px;
         padding: 5px;
         padding-left: 10px;
         padding-right: 10px;
-		border-radius: 10px;
+        border-radius: 10px;
         border: none;
     }
 
@@ -75,11 +82,14 @@
         padding-left: 2px;
         padding-right: 2px;
         color: black;
+        border: none;
+        border-radius: 2px;
     }
 
     .list tr {
         display: block;
         float: left;
+        overflow-x: hidden;
     }
 
     .list td {
@@ -88,7 +98,6 @@
         padding-right: 0.5vw;
         padding-top: 0.25ch;
         padding-bottom: 0.25ch;
-        min-width: 47.5vw;
     }
 
     .list tr td:hover {
@@ -103,21 +112,30 @@
     .recommend_overlay {
         overflow-y: auto;
         margin: 5px;
+        border: none;
+        border-bottom-left-radius: 10px;
     }
 
     .folder_overlay {
         overflow-y: auto;
         margin: 5px;
+        border: none;
+        border-top-left-radius: 10px;
     }
 
     #current_player_container {
         background-color: #333;
         margin-top: 5px;
+        border: none;
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
     }
 
     #equalizer_visualer {
         width: 100%;
         height: 30vh;
+        border: none;
+        border-top-right-radius: 10px;
     }
 
     .content_container {
@@ -135,16 +153,20 @@
             bottom: 5%;
             right: 5%;
         }
+
+        .list td {
+            width: calc(50vw - 60px);
+        }
     }
 
-    @media screen and (min-aspect-ratio: 1/1) {	
+    @media screen and (min-aspect-ratio: 1/1) {
         #button_scrollUp {
             display: none;
         }
 
         .overlay {
             position: fixed;
-            right: 5px;
+            right: 10px;
             height: calc(100vh - 90px);
             width: calc(50vw - 20px);
         }
@@ -174,6 +196,10 @@
 
         .folder_overlay {
             top: 70px;
+        }
+
+        .list tr {
+            width: calc(50vw - 20px - 25px);
         }
     }
 </style>
@@ -692,24 +718,29 @@
             let promises = [];
 
             songLinks.forEach(link => {
-                let audio = new Audio();
+                if (inWebMode) {
+                    totalDuration.push(5);
+                }
+                else {
+                    let audio = new Audio();
 
-                audio.src = link;
+                    audio.src = link;
 
-                let promise = new Promise((resolve, reject) => {
-                    audio.onloadedmetadata = () => {
-                        totalDuration.push(audio.duration);
-                        resolve();
-                    };
+                    let promise = new Promise((resolve, reject) => {
+                        audio.onloadedmetadata = () => {
+                            totalDuration.push(audio.duration);
+                            resolve();
+                        };
 
-                    audio.onerror = () => {
-                        reject(`Error loading ${link}`);
-                    };
-                });
+                        audio.onerror = () => {
+                            reject(`Error loading ${link}`);
+                        };
+                    });
 
-                promises.push(promise);
+                    promises.push(promise);
 
-                audio.load();
+                    audio.load();
+                }
             });
 
             return Promise.all(promises).then(() => {
@@ -720,7 +751,7 @@
             let path = window.location.href;
 
             let slash = path.lastIndexOf('/');
-            if(slash === path.length - 1) {
+            if (slash === path.length - 1) {
                 path = path.substring(0, slash);
                 slash = path.lastIndexOf('/');
             }
@@ -728,13 +759,13 @@
             path = path.substring(0, slash);
 
             let dot = pathMusic.indexOf("./");
-            
-            if(dot !== -1 && dot === 0) {
+
+            if (dot !== -1 && dot === 0) {
                 pathMusic = pathMusic.substring(3);
             }
 
             let dotdot = pathMusic.indexOf("../");
-            while(dotdot !== -1) {
+            while (dotdot !== -1) {
                 slash = path.lastIndexOf('/');
                 path = path.substring(0, slash);
 
@@ -750,7 +781,7 @@
             return getSongDurations(playlist)
                 .then(totalDuration => {
                     for (let i = 0; i < playlist.length; i++) {
-                        resFile += `#EXFINF:${Math.ceil(totalDuration[i])},${chopLocDirRaw(playlist[i], directorySeparation)} - ${convertLinkToName(playlist[i])}\n${ inWebMode ? convertMusicLinkToWeb(playlist[i]) : playlist[i]}\n`;
+                        resFile += `#EXFINF:${Math.ceil(totalDuration[i])},${chopLocDirRaw(playlist[i], directorySeparation)} - ${convertLinkToName(playlist[i])}\n${inWebMode ? convertMusicLinkToWeb(playlist[i]) : playlist[i]}\n`;
                     }
 
                     return resFile;
