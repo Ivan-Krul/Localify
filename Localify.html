@@ -39,11 +39,6 @@
         border: none;
         border-radius: 10px;
         margin-bottom: 5px;
-
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        width: calc(100vw - 40px);
     }
 
     select,
@@ -135,7 +130,7 @@
         width: 100%;
         height: 30vh;
         border: none;
-        border-top-right-radius: 10px;
+        border-top-right-radius: 5px;
     }
 
     .content_container {
@@ -146,6 +141,21 @@
         overflow-x: hidden;
     }
 
+    .checkbox {
+        scale:150%;
+        margin-right: 1ch;
+    }
+
+    .search {
+        border: 1px solid grey;
+        border-radius: 5px;
+    }
+
+    #search_music {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
     @media screen and (max-aspect-ratio: 1/1) {
         #button_scrollUp {
             position: fixed;
@@ -153,13 +163,20 @@
             bottom: 5%;
             right: 5%;
         }
-
-        .list td {
-            width: calc(50vw - 60px);
+        
+        .list tr {
+            width: calc(100vw - 30px);
         }
     }
 
     @media screen and (min-aspect-ratio: 1/1) {
+        #title_container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: calc(100vw - 40px);
+        }
+    
         #button_scrollUp {
             display: none;
         }
@@ -214,22 +231,25 @@
             <audio controls id="player"></audio>
 
             <button id="button_previous">Previous</button>
-            <button id="button_chooseRandomly">Choose Randomly</button>
             <button id="button_next">Next</button>
             <button id="button_push">Push to list</button>
             <button id="button_pop">Pop from list</button>
             <button id="button_clear">Clear list</button>
-            <button id="button_downloadPlaylist">Download playlist (in content.txt)</button>
-            <select id="select_eqRenderStage">
-                <option value="full">Full res EQ</option>
-                <option value="half">Half res EQ</option>
-                <option value="fifth">Fifth res EQ</option>
-                <option value="average x5">Average x5 res EQ</option>
-                <option value="average 4">Average 4 res EQ</option>
-                <option value="only 3">Only 3 res EQ</option>
-                <option value="no">Without EQ</option>
-            </select>
-            <button id="button_recordEQ">Record EQ</button>
+            <button id="button_chooseRandomly">Choose Randomly</button>
+            <button id="button_settings">Settings</button>
+            <div id="settings_container" style="background-color: #555; display:none;">
+                <button id="button_downloadPlaylist">Download playlist (in content.txt)</button>
+                <select id="select_eqRenderStage">
+                    <option value="full">Full res EQ</option>
+                    <option value="half">Half res EQ</option>
+                    <option value="fifth">Fifth res EQ</option>
+                    <option value="average x5">Average x5 res EQ</option>
+                    <option value="average 4">Average 4 res EQ</option>
+                    <option value="only 3">Only 3 res EQ</option>
+                    <option value="no">Without EQ</option>
+                </select>
+                <button id="button_recordEQ">Record EQ</button>
+            </div>
 
             <div>
                 <label for="name">Name:&ThickSpace;&ThickSpace;</label>
@@ -250,6 +270,7 @@
                 </table>
             </div>
             <div class="recommend_overlay">
+                <input type="search" id="search_music" class="search">
                 <table id="table_recommend_container" class="list recommend_container">
                 </table>
             </div>
@@ -377,6 +398,8 @@
             this.render = false;
             this.scaleX = this.eq_visualizer.offsetWidth;
             this.scaleY = this.eq_visualizer.offsetHeight;
+
+            this.ondebugshowing = (event) => {};
         }
 
         Equalizer.prototype.getAnimationRequester = function () {
@@ -385,7 +408,6 @@
 
         Equalizer.prototype.startFrame = function (collect = true) {
             this.x = 0;
-
             if (collect)
                 this.analyser.getByteFrequencyData(this.dataArray);
 
@@ -490,7 +512,7 @@
         };
         Equalizer.prototype.checkStage = function () {
             //requestAnimationFrame(Equalizer.prototype.checkStage);
-
+            
             this.scaleX = this.eq_visualizer.offsetWidth / 912;
             this.scaleY = this.eq_visualizer.offsetHeight / 276;
 
@@ -627,11 +649,12 @@
 
         // choose randomly
         function selectRandomMusic() {
-            current = getRandomInt(globalList.length);
-            selected = -1;
+            let table = document.getElementById("table_recommend_container");
+            table.children[0].children[getRandomInt(table.children[0].children.length)].click();
+            /*selected = -1;
             selectMusicToPlay();
             equalizer.context.resume();
-            document.getElementById("player").play();
+            document.getElementById("player").play();*/
         }
         document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
 
@@ -829,11 +852,13 @@
             }
         }
         function startRecordingEQ() {
-            document.getElementById("player").onended = handleEndRecords;
-            arrauEqRecord = [];
-            document.getElementById("player").currentTime = 0;
-            document.getElementById("player").play();
-            eqRecord = true;
+            if(confirm("You sure? (recording of equalizer would take storage and performance)")) {
+                document.getElementById("player").onended = handleEndRecords;
+                arrauEqRecord = [];
+                document.getElementById("player").currentTime = 0;
+                document.getElementById("player").play();
+                eqRecord = true;
+            }
         }
         document.getElementById("button_recordEQ").onclick = startRecordingEQ;
 
@@ -884,12 +909,12 @@
             equalizer.context.resume();
             document.getElementById("player").play();
         }
-        function selectElementsAndOutputIndexes(list, searchString) {
+        function selectElementsAndOutputIndexes(list, searchString, toLowerCase = false) {
             const indexes = [];
             list.forEach((element, index) => {
-                if (element.indexOf(searchString) !== -1) {
+
+                if ((toLowerCase ? element.toLowerCase() : element).indexOf((toLowerCase ? searchString.toLowerCase() : searchString)) !== -1)
                     indexes.push(index);
-                }
             });
             return indexes;
         }
@@ -955,6 +980,35 @@
 
         // scroll up
         document.getElementById("button_scrollUp").onclick = scrollToTop;
+
+        // settings
+        function toggleSettings() {
+            if(document.getElementById("settings_container").style.display === "none")
+                document.getElementById("settings_container").style.display = "block";
+            else
+                document.getElementById("settings_container").style.display = "none";
+        }
+        document.getElementById("button_settings").onclick = toggleSettings;
+
+        // search bar
+        function searchMusicByName(target) {
+            if(target.target.value === "") return;
+
+            let list = globalList.filter((elem) => {return (elem.toLowerCase()).includes(target.target.value.toLowerCase());});
+            
+            outputPartionRecommends(list, selectElementsAndOutputIndexes(globalList, target.target.value, true));
+        }
+        document.getElementById("search_music").oninput = searchMusicByName;
+
+        // key binding
+        document.addEventListener('keypress', e => {
+            if (e.which === ' '.charCodeAt(0)) {
+                if(document.getElementById("player").paused)
+                    document.getElementById("player").play();
+                else
+                    document.getElementById("player").pause();
+            }
+        });
 
         // end
         (async () => {

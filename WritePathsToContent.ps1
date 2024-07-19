@@ -28,9 +28,9 @@ function Check-AdditionalDirectories
 
     foreach($path in $filePathlist)
     {
-        Set-Location -Path $path
+        Set-Location -LiteralPath $path
         Write-Host "Import from`t: $($path)"
-        $allFilesLocal = Get-ChildItem -Path $Directory -File -Name -Recurse
+        $allFilesLocal = Get-ChildItem $Directory -File -Name -Recurse
         for($i = 0; $i -lt $allFilesLocal.Count; $i++)
 		{
 			$allFilesLocal[$i] = "$($path)$($allFilesLocal[$i])"
@@ -70,7 +70,7 @@ function Parse-Ignore
         [string[]]$allFiles
     )
 
-    $ignorePatterns = Get-Content -Path $IgnoreFilePath -Encoding UTF8
+    $ignorePatterns = Get-Content -LiteralPath $IgnoreFilePath -Encoding UTF8
     $ignorePatternList = $ignorePatterns.Split("`n")
     Write-List $ignorePatternList
 

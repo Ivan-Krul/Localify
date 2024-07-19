@@ -13,6 +13,6 @@
 .*\.woff
 .*\.md
 .*\.ttf
-\.gitignore
+.*\.git.*
 .*#.*
 .*\\a\\.*
