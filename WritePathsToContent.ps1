@@ -1,3 +1,4 @@
+Set-Location $PSScriptRoot
 Clear-Host
 
 function Write-List

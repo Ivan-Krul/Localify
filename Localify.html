@@ -239,6 +239,8 @@
             <button id="button_settings">Settings</button>
             <div id="settings_container" style="background-color: #555; display:none;">
                 <button id="button_downloadPlaylist">Download playlist (in content.txt)</button>
+                <button id="refresh_list"><a href="powershell://D:/Web Pages/Localify/WritePathsToContent.ps1">Refresh list (uses specific URI protocol)</a></button>
+                <div>
                 <select id="select_eqRenderStage">
                     <option value="full">Full res EQ</option>
                     <option value="half">Half res EQ</option>
@@ -249,6 +251,9 @@
                     <option value="no">Without EQ</option>
                 </select>
                 <button id="button_recordEQ">Record EQ</button>
+                <div><label for="color_baseColor">Base EQ color (the lowest colomn):</label><input type="color" value="#141414" id="color_baseColor"></div>
+                <div><label for="color_colorMult">EQ color multiplier (x/128):</label><input type="color" value="#404040" id="color_colorMult"></div>
+            </div>
             </div>
 
             <div>
@@ -399,6 +404,9 @@
             this.scaleX = this.eq_visualizer.offsetWidth;
             this.scaleY = this.eq_visualizer.offsetHeight;
 
+            this.baseColor = {r: 20, g: 20, b: 20};
+            this.baseColorMultiplier = {r: 1, g: 1, b: 1};
+
             this.ondebugshowing = (event) => {};
         }
 
@@ -416,9 +424,9 @@
         };
 
         Equalizer.prototype.colorCanvasRectange = function (width) {
-            var r = this.barHeight / 1.5 + 20;
-            var g = this.barHeight / 1.5 + 20;
-            var b = this.barHeight / 1.5 + 20;
+            var r = (this.barHeight / 1.5 + this.baseColor.r) * this.baseColorMultiplier.r;
+            var g = (this.barHeight / 1.5 + this.baseColor.g) * this.baseColorMultiplier.g;
+            var b = (this.barHeight / 1.5 + this.baseColor.b) * this.baseColorMultiplier.b;
             const amplitude = 3.5;
 
             this.canvasContext.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
@@ -446,6 +454,15 @@
         };
 
         Equalizer.prototype.renderFifthFrame = function () {
+            this.startFrame();
+
+            for (let i = 0; i < this.bufferLength * 0.8; i += 5) {
+                this.barHeight = this.dataArray[i];
+                this.colorCanvasRectange(5);
+            }
+        };
+
+        Equalizer.prototype.renderWaveFrame = function () {
             this.startFrame();
 
             for (let i = 0; i < this.bufferLength * 0.8; i += 5) {
@@ -530,6 +547,9 @@
                         break;
                     case "fifth":
                         self.renderFifthFrame();
+                        break;
+                    case "wave":
+                        self.renderWaveFrame();
                         break;
                     case "average x5":
                         self.renderAverageX5Frame();
@@ -1010,6 +1030,61 @@
             }
         });
 
+        // color settings from localStorage
+        function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+          } : null;
+        }
+
+        function rgbToHex(rgb) {
+            return "#" + (1 << 24 | rgb.r << 16 | rgb.g << 8 | rgb.b).toString(16).slice(1);
+        }
+
+        function getColorFromLocalStorage() {
+            let colorSettings = {};
+            if (localStorage.getItem("colors_for_EQ"))
+                colorSettings = JSON.parse(localStorage.getItem("colors_for_EQ"));
+            else return;
+
+            let normBaseColor = hexToRgb(colorSettings.baseColor);
+            let normColorMult = hexToRgb(colorSettings.colorMultiplier);
+
+            normColorMult.r /= 128;
+            normColorMult.g /= 128;
+            normColorMult.b /= 128;
+
+            equalizer.baseColor           = normBaseColor;
+            equalizer.baseColorMultiplier = normColorMult;
+
+            document.getElementById("color_baseColor").value = colorSettings.baseColor;
+            document.getElementById("color_colorMult").value = colorSettings.colorMultiplier;
+        }
+
+        function handleColorPick() {
+            let colorSettings = {};
+
+            colorSettings.baseColor = document.getElementById("color_baseColor").value;
+            colorSettings.colorMultiplier = document.getElementById("color_colorMult").value;
+
+            let normBaseColor = hexToRgb(colorSettings.baseColor);
+            let normColorMult = hexToRgb(colorSettings.colorMultiplier);
+
+            normColorMult.r /= 128;
+            normColorMult.g /= 128;
+            normColorMult.b /= 128;
+
+            equalizer.baseColor           = normBaseColor;
+            equalizer.baseColorMultiplier = normColorMult;
+
+            localStorage.setItem("colors_for_EQ", JSON.stringify(colorSettings));
+        }
+        document.getElementById("color_baseColor").onchange = handleColorPick;
+        document.getElementById("color_colorMult").onchange = handleColorPick;
+
         // end
         (async () => {
             globalList = (await readFromFileURL("./content.txt"))
@@ -1022,6 +1097,7 @@
             setTable(0, document.getElementById("table_folder_container"));
             createFolderList();
             setVolume();
+            getColorFromLocalStorage();
             initSelectorEQ();
             equalizer.checkStage();
             foldAllFolders(folderList);
