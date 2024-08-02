@@ -424,9 +424,9 @@
         };
 
         Equalizer.prototype.colorCanvasRectange = function (width) {
-            var r = (this.barHeight / 1.5 + this.baseColor.r) * this.baseColorMultiplier.r;
-            var g = (this.barHeight / 1.5 + this.baseColor.g) * this.baseColorMultiplier.g;
-            var b = (this.barHeight / 1.5 + this.baseColor.b) * this.baseColorMultiplier.b;
+            var r = (this.barHeight / 1.5 * this.baseColorMultiplier.r ) + this.baseColor.r;
+            var g = (this.barHeight / 1.5 * this.baseColorMultiplier.g ) + this.baseColor.g;
+            var b = (this.barHeight / 1.5 * this.baseColorMultiplier.b ) + this.baseColor.b;
             const amplitude = 3.5;
 
             this.canvasContext.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
