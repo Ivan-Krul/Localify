@@ -236,25 +236,27 @@
             <button id="button_pop">Pop from list</button>
             <button id="button_clear">Clear list</button>
             <button id="button_chooseRandomly">Choose Randomly</button>
-            <button id="button_settings">Settings</button>
-            <div id="settings_container" style="background-color: #555; display:none;">
+            <details id="settings_container" style="background-color: #555; padding-top: 1ch; padding-bottom: 1ch">
+				<summary>Settings</summary>
                 <button id="button_downloadPlaylist">Download playlist (in content.txt)</button>
                 <button id="refresh_list"><a href="powershell://D:/Web Pages/Localify/WritePathsToContent.ps1">Refresh list (uses specific URI protocol)</a></button>
                 <div>
-                <select id="select_eqRenderStage">
-                    <option value="full">Full res EQ</option>
-                    <option value="half">Half res EQ</option>
-                    <option value="fifth">Fifth res EQ</option>
-                    <option value="average x5">Average x5 res EQ</option>
-                    <option value="average 4">Average 4 res EQ</option>
-                    <option value="only 3">Only 3 res EQ</option>
-                    <option value="no">Without EQ</option>
-                </select>
-                <button id="button_recordEQ">Record EQ</button>
-                <div><label for="color_baseColor">Base EQ color (the lowest colomn):</label><input type="color" value="#141414" id="color_baseColor"></div>
-                <div><label for="color_colorMult">EQ color multiplier (x/128):</label><input type="color" value="#404040" id="color_colorMult"></div>
+                    <select id="select_eqRenderStage">
+                        <option value="full">Full res EQ</option>
+                        <option value="half">Half res EQ</option>
+                        <option value="fifth">Fifth res EQ</option>
+                        <option value="average x5">Average x5 res EQ</option>
+                        <option value="average 4">Average 4 res EQ</option>
+                        <option value="only 3">Only 3 res EQ</option>
+                        <option value="no">Without EQ</option>
+                    </select>
+                    <button id="button_recordEQ">Record EQ</button>
+                    <div><label for="number_delay">Frame rate for EQ:</label><input type="number" min="0" step="1" id="number_delay" style="width: 10ch"></div>
+					<div><label for="number_frame_delay_mult">Delay multiplier (Input * EQ resolution) in ms:</label><input type="number" min="0.5" value="1" id="number_frame_delay_mult" style="width: 10ch"></div>
+                <div><label for="color_baseColor">Base EQ color:</label><input type="color" value="#141414" id="color_baseColor"></div>
+                <div><label for="color_colorShift">EQ secondary color:</label><input type="color" value="#404040" id="color_colorShift"></div>
             </div>
-            </div>
+            </details>
 
             <div>
                 <label for="name">Name:&ThickSpace;&ThickSpace;</label>
@@ -370,12 +372,25 @@
             });
         }
 
+		function arraysEqual(a, b) {
+			if (a === b) return true;
+			if (a == null || b == null) return false;
+			if (a.length !== b.length) return false;
+			
+			for (var i = 0; i < a.length; ++i) {
+				if (a[i] !== b[i]) return false;
+			}
+			return true;
+		}
+
+
         // predecl
         // render equalizer visualiser
         // sources: https://codepen.io/nfj525/pen/rVBaab -> "JS Audio Visualizer" by "Nick Jones"
         function Equalizer() {
             this.context = new AudioContext();
-            this.src = this.context.createMediaElementSource(document.getElementById("player"));
+            this.player = document.getElementById("player");
+            this.src = this.context.createMediaElementSource(this.player);
             this.analyser = this.context.createAnalyser();
 
             this.eq_visualizer = document.getElementById("equalizer_visualer");
@@ -403,11 +418,21 @@
             this.render = false;
             this.scaleX = this.eq_visualizer.offsetWidth;
             this.scaleY = this.eq_visualizer.offsetHeight;
+			
+			this.prevDataArray = new Uint8Array(this.bufferLength);
+			this.repeats = false;
 
-            this.baseColor = {r: 20, g: 20, b: 20};
-            this.baseColorMultiplier = {r: 1, g: 1, b: 1};
+            this.baseColorFrom = {r: 20, g: 20, b: 20};
+            this.baseColorTo = {r: 255, g: 255, b: 255};
+
+            this.delay = undefined;
+			this.colomnWidth = 1;
+			this.delayMult = 1;
 
             this.ondebugshowing = (event) => {};
+			
+			this.canvasContext.fillStyle = "#000";
+            this.canvasContext.fillRect(0, 0, this.WIDTH, this.HEIGHT);
         }
 
         Equalizer.prototype.getAnimationRequester = function () {
@@ -416,27 +441,45 @@
 
         Equalizer.prototype.startFrame = function (collect = true) {
             this.x = 0;
+			
+			for(let i = 0; i < this.dataArray.length; i++) {
+				this.prevDataArray[i] = this.dataArray[i];
+			}
+			
             if (collect)
                 this.analyser.getByteFrequencyData(this.dataArray);
 
+			this.repeats = arraysEqual(this.dataArray,this.prevDataArray);
+
+			if(this.repeats) return;
+			
             this.canvasContext.fillStyle = "#000";
             this.canvasContext.fillRect(0, 0, this.WIDTH, this.HEIGHT);
         };
 
         Equalizer.prototype.colorCanvasRectange = function (width) {
-            var r = (this.barHeight / 1.5 * this.baseColorMultiplier.r ) + this.baseColor.r;
-            var g = (this.barHeight / 1.5 * this.baseColorMultiplier.g ) + this.baseColor.g;
-            var b = (this.barHeight / 1.5 * this.baseColorMultiplier.b ) + this.baseColor.b;
+			this.colomnWidth = width;
+            var fraq = (this.barHeight / 256.0);
+
+            var r = fraq * (this.baseColorTo.r - this.baseColorFrom.r) + this.baseColorFrom.r;
+            var g = fraq * (this.baseColorTo.g - this.baseColorFrom.g) + this.baseColorFrom.g;
+            var b = fraq * (this.baseColorTo.b - this.baseColorFrom.b) + this.baseColorFrom.b;
             const amplitude = 3.5;
 
+            let bh = fraq * this.HEIGHT;
+
+            if(this.HEIGHT - bh < 0)
+                console.log(this.HEIGHT - bh);
+
             this.canvasContext.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-            this.canvasContext.fillRect(this.x, this.HEIGHT - this.barHeight * amplitude * this.scaleY, this.barWidth * width, this.barHeight * amplitude * this.scaleY);
+            this.canvasContext.fillRect(this.x, this.HEIGHT - bh, this.barWidth * width, bh);
 
             this.x += this.barWidth * width - 1;
         };
 
         Equalizer.prototype.renderFullFrame = function () {
             this.startFrame();
+			if(this.repeats) return;
 
             for (let i = 0; i < this.bufferLength * 0.8; i++) {
                 this.barHeight = this.dataArray[i];
@@ -446,6 +489,7 @@
 
         Equalizer.prototype.renderSemiFrame = function () {
             this.startFrame();
+			if(this.repeats) return;
 
             for (let i = 0; i < this.bufferLength * 0.8; i += 2) {
                 this.barHeight = this.dataArray[i];
@@ -455,6 +499,7 @@
 
         Equalizer.prototype.renderFifthFrame = function () {
             this.startFrame();
+			if(this.repeats) return;
 
             for (let i = 0; i < this.bufferLength * 0.8; i += 5) {
                 this.barHeight = this.dataArray[i];
@@ -464,6 +509,7 @@
 
         Equalizer.prototype.renderWaveFrame = function () {
             this.startFrame();
+			if(this.repeats) return;
 
             for (let i = 0; i < this.bufferLength * 0.8; i += 5) {
                 this.barHeight = this.dataArray[i];
@@ -473,6 +519,7 @@
 
         Equalizer.prototype.renderAverageX5Frame = function () {
             this.startFrame();
+			if(this.repeats) return;
 
             for (let i = 0; i < this.bufferLength * 0.8; i++) {
                 this.barHeight += this.dataArray[i];
@@ -485,6 +532,7 @@
         };
         Equalizer.prototype.renderAverage4Frame = function () {
             this.startFrame();
+			if(this.repeats) return;
 
             var count = 0;
 
@@ -511,6 +559,7 @@
 
         Equalizer.prototype.renderOnly3Frame = function () {
             this.startFrame();
+			if(this.repeats) return;
 
             this.barHeight = this.dataArray[0];
             this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
@@ -529,15 +578,17 @@
         };
         Equalizer.prototype.checkStage = function () {
             //requestAnimationFrame(Equalizer.prototype.checkStage);
-            
-            this.scaleX = this.eq_visualizer.offsetWidth / 912;
-            this.scaleY = this.eq_visualizer.offsetHeight / 276;
-
-
-
             const self = this;
             const incheckStage = () => {
+                self.scaleX = self.eq_visualizer.offsetWidth / 912;
+                self.scaleY = self.eq_visualizer.offsetHeight / 276;
                 var stage = document.getElementById("select_eqRenderStage").value;
+                if (eqRecord) {
+                    let time = Intl.NumberFormat("en", {minimumFractionDigits:4}).format(self.player.currentTime);
+                    arrauEqRecord.push([time]);
+                    for(let i = 0; i < self.bufferLength; i++)
+                        arrauEqRecord[arrauEqRecord.length - 1].push(self.dataArray[i]);
+                }
                 switch (stage) {
                     case "full":
                         self.renderFullFrame();
@@ -565,14 +616,18 @@
                         self.unpinAnimation();
                         break;
                 }
-                if (eqRecord) {
-                    self.eq_visualizer.toBlob((blob) => {
-                        arrauEqRecord.push(blob);
-                        console.log(arrauEqRecord.length);
-                    })
-                }
+                
                 if (self.render)
-                    self.req = requestAnimationFrame(incheckStage);
+                    if(self.delay !== 0 && self.delay != Infinity) 
+						setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, self.delay);
+					else if(self.repeats) {
+						console.log("repeat");
+						setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, 25);
+					}
+                    else {
+                        setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, self.colomnWidth * self.delayMult);
+					}
+                    
             }
 
 
@@ -606,6 +661,9 @@
         }
 
         function setMusicToPlay() {
+            if(eqRecord)
+                handleEndRecords();
+
             let set = "";
             if (current === -1)
                 set = playlist[selected];
@@ -851,33 +909,39 @@
         document.getElementById("button_downloadPlaylist").onclick = downloadPlaylist;
 
         // record EQ
-        function handleDownloadPartion(beg, end, name) {
-            const downloadLink = document.createElement('a');
-
-            for (let i = beg; i < Math.min(end, arrauEqRecord.length); i++) {
-                downloadLink.href = URL.createObjectURL(arrauEqRecord[i]);
-                downloadLink.download = `${name} ${i}.png`;
-                downloadLink.click();
-                URL.revokeObjectURL(arrauEqRecord[i]);
-            }
-        }
         function handleEndRecords() {
-            document.getElementById("player").onended = nextMusic;
             eqRecord = false;
+            document.getElementById("player").onended = nextMusic;
+            console.log("ending recording...");
 
             const downloadLink = document.createElement('a');
 
-            for (let i = 0; i < arrauEqRecord.length; i += 15) {
-                setTimeout(handleDownloadPartion, 3000 * Math.floor(i / 15), i, i + 15, "EQRecord");
+            let str = "";
+
+            for (let i = 0; i < arrauEqRecord.length; i++) {
+                for (let j = 0; j < arrauEqRecord[i].length; j++) {
+                    str += arrauEqRecord[i][j];
+                    if(j < arrauEqRecord[i].length - 1)
+                        str += `\t`
+                }
+                str+= "\n";
             }
+
+            arrauEqRecord = [];
+            let blob = new Blob([str], {type:"text/text"});
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = `${convertLinkToName(globalList[current], directorySeparation)} EQList.txt`;
+            downloadLink.click();
+            URL.revokeObjectURL(blob);
         }
         function startRecordingEQ() {
             if(confirm("You sure? (recording of equalizer would take storage and performance)")) {
                 document.getElementById("player").onended = handleEndRecords;
+                console.log("recording...");
                 arrauEqRecord = [];
+                eqRecord = true;
                 document.getElementById("player").currentTime = 0;
                 document.getElementById("player").play();
-                eqRecord = true;
             }
         }
         document.getElementById("button_recordEQ").onclick = startRecordingEQ;
@@ -1001,15 +1065,6 @@
         // scroll up
         document.getElementById("button_scrollUp").onclick = scrollToTop;
 
-        // settings
-        function toggleSettings() {
-            if(document.getElementById("settings_container").style.display === "none")
-                document.getElementById("settings_container").style.display = "block";
-            else
-                document.getElementById("settings_container").style.display = "none";
-        }
-        document.getElementById("button_settings").onclick = toggleSettings;
-
         // search bar
         function searchMusicByName(target) {
             if(target.target.value === "") return;
@@ -1021,14 +1076,14 @@
         document.getElementById("search_music").oninput = searchMusicByName;
 
         // key binding
-        document.addEventListener('keypress', e => {
+        /*document.addEventListener('keypress', e => {
             if (e.which === ' '.charCodeAt(0)) {
                 if(document.getElementById("player").paused)
                     document.getElementById("player").play();
                 else
                     document.getElementById("player").pause();
             }
-        });
+        });*/
 
         // color settings from localStorage
         function hexToRgb(hex) {
@@ -1050,40 +1105,50 @@
                 colorSettings = JSON.parse(localStorage.getItem("colors_for_EQ"));
             else return;
 
+            if(colorSettings.colorShift === null)
+                colorSettings.colorShift = "#000000";
+
             let normBaseColor = hexToRgb(colorSettings.baseColor);
-            let normColorMult = hexToRgb(colorSettings.colorMultiplier);
+            let normShift    = hexToRgb(colorSettings.colorShift);
 
-            normColorMult.r /= 128;
-            normColorMult.g /= 128;
-            normColorMult.b /= 128;
-
-            equalizer.baseColor           = normBaseColor;
-            equalizer.baseColorMultiplier = normColorMult;
+            equalizer.baseColorFrom = normBaseColor;
+            equalizer.baseColorTo   = normShift;
 
             document.getElementById("color_baseColor").value = colorSettings.baseColor;
-            document.getElementById("color_colorMult").value = colorSettings.colorMultiplier;
+            document.getElementById("color_colorShift").value = colorSettings.colorShift;
         }
 
         function handleColorPick() {
             let colorSettings = {};
 
             colorSettings.baseColor = document.getElementById("color_baseColor").value;
-            colorSettings.colorMultiplier = document.getElementById("color_colorMult").value;
+            colorSettings.colorShift = document.getElementById("color_colorShift").value;
 
-            let normBaseColor = hexToRgb(colorSettings.baseColor);
-            let normColorMult = hexToRgb(colorSettings.colorMultiplier);
+            let normBase = hexToRgb(colorSettings.baseColor);
+            let normShift = hexToRgb(colorSettings.colorShift);
 
-            normColorMult.r /= 128;
-            normColorMult.g /= 128;
-            normColorMult.b /= 128;
-
-            equalizer.baseColor           = normBaseColor;
-            equalizer.baseColorMultiplier = normColorMult;
+            equalizer.baseColorFrom = normBase;
+            equalizer.baseColorTo   = normShift;
 
             localStorage.setItem("colors_for_EQ", JSON.stringify(colorSettings));
         }
         document.getElementById("color_baseColor").onchange = handleColorPick;
-        document.getElementById("color_colorMult").onchange = handleColorPick;
+        document.getElementById("color_colorShift").onchange = handleColorPick;
+
+        // EQ frame delay
+        function changeFrameRate(event) {
+            forceChangeFrameRate(event.target.value);
+        }
+        function forceChangeFrameRate(framerate) {
+            equalizer.delay = 1000/framerate;
+        }
+        document.getElementById("number_delay").onchange = changeFrameRate;
+
+		// EQ delay multiplier
+		function changeDelayMultiplier(event) {
+			equalizer.delayMult = parseFloat(event.target.value)
+		}
+		document.getElementById("number_frame_delay_mult").onchange = changeDelayMultiplier;
 
         // end
         (async () => {
@@ -1102,6 +1167,7 @@
             equalizer.checkStage();
             foldAllFolders(folderList);
             outputRecommends(globalList);
+            forceChangeFrameRate(document.getElementById("number_delay").value);
         })();
     </script>
 
