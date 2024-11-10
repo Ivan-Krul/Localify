@@ -100,19 +100,29 @@
   }
 
   .overlay {
-    overflow-y: auto;
     padding: 5px;
   }
 
   .recommend_overlay {
-    overflow-y: auto;
     margin: 5px;
     border: none;
     border-bottom-left-radius: 10px;
   }
 
-  .folder_overlay {
+  .scrollable {
     overflow-y: auto;
+    overflow-x: hidden;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  #playlist_container {
+    height: calc(100% - (30vh + 70px + 10ch));
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  .folder_overlay {
     margin: 5px;
     border: none;
     border-top-left-radius: 10px;
@@ -131,14 +141,11 @@
     height: 30vh;
     border: none;
     border-top-right-radius: 5px;
+    display: inherit;
   }
 
   .content_container {
     height: calc(100vh - 75px);
-  }
-
-  .overlay {
-    overflow-x: hidden;
   }
 
   .checkbox {
@@ -256,71 +263,77 @@
   </div>
   <div class="content_container">
     <div id="current_player_container" class="overlay">
-      <canvas id="equalizer_visualer"></canvas>
-      <div id="player_container">
-        <div id="player_inner">
-          <button id="player_play_pause">&gt;</button>
-          <input type="range" id="player_progress" step="0.1" value="0" min="0"></progress>
-          <label for="player_progress" id="player_time">
-            <span id="player_current_progress">0:00</span>
-              <span style="color:gray;"> / 
-                <span id="player_progress_limit">0:00</span>
-              </span>
-            </label>
-            
-          <button id="player_volume_mute">V</button>
-          <input type="range" id="player_volume_slider" name="volume" min="0" max="1" value="0.5" step="0.01" />
+      <div>
+        <canvas id="equalizer_visualer"></canvas>
+        <div id="player_container">
+          <div id="player_inner">
+            <button id="player_play_pause">&gt;</button>
+            <input type="range" id="player_progress" step="0.1" value="0" min="0"></progress>
+            <label for="player_progress" id="player_time">
+              <span id="player_current_progress">0:00</span>
+                <span style="color:gray;"> / 
+                  <span id="player_progress_limit">0:00</span>
+                </span>
+              </label>
+              
+            <button id="player_volume_mute">V</button>
+            <input type="range" id="player_volume_slider" name="volume" min="0" max="1" value="0.5" step="0.01" />
+          </div>
         </div>
-      </div>
-      <audio id="player"></audio>
+        <audio id="player"></audio>
 
-      <button id="button_previous">Previous</button>
-      <button id="button_next">Next</button>
-      <button id="button_push">Push to list</button>
-      <button id="button_pop">Pop from list</button>
-      <button id="button_clear">Clear list</button>
-      <button id="button_chooseRandomly">Choose Randomly</button>
-      <details id="settings_container" style="background-color: #555; padding-top: 1ch; padding-bottom: 1ch">
-				<summary>Settings</summary>
-        <button id="button_downloadPlaylist">Download playlist (in content.txt)</button>
-        <button id="refresh_list"><a href="powershell://D:/Web Pages/Localify/WritePathsToContent.ps1">Refresh list (uses specific URI protocol)</a></button>
         <div>
-          <select id="select_eqRenderStage">
-            <option value="full">Full res EQ</option>
-            <option value="half">Half res EQ</option>
-            <option value="fifth">Fifth res EQ</option>
-            <option value="average x5">Average x5 res EQ</option>
-            <option value="average 4">Average 4 res EQ</option>
-            <option value="only 3">Only 3 res EQ</option>
-            <option value="no">Without EQ</option>
-          </select>
-          <button id="button_recordEQ">Record EQ</button>
-          <div><label for="number_delay">Frame rate for EQ:</label><input type="number" min="0" step="1" id="number_delay" style="width: 10ch"></div>
-					<div><label for="number_frame_delay_mult">Delay multiplier (Input * EQ resolution) in ms:</label><input type="number" min="0.5" value="1" id="number_frame_delay_mult" style="width: 10ch"></div>
-        <div><label for="color_baseColor">Base EQ color:</label><input type="color" value="#141414" id="color_baseColor"></div>
-        <div><label for="color_colorShift">EQ secondary color:</label><input type="color" value="#404040" id="color_colorShift"></div>
-      </div>
-      </details>
+          <button id="button_previous">Previous</button>
+          <button id="button_next">Next</button>
+          <button id="button_push">Push to list</button>
+          <button id="button_pop">Pop from list</button>
+          <button id="button_clear">Clear list</button>
+          <button id="button_chooseRandomly">Choose Randomly</button>
+        </div>
+        <details id="settings_container" style="background-color: #555; padding-top: 1ch; padding-bottom: 1ch">
+          <summary>Settings</summary>
+          <button id="button_downloadPlaylist">Download playlist (in content.txt)</button>
+          <button id="refresh_list"><a href="powershell://D:/Web Pages/Localify/WritePathsToContent.ps1">Refresh list (uses specific URI protocol)</a></button>
+          <div>
+            <select id="select_eqRenderStage">
+              <option value="full">Full res EQ</option>
+              <option value="half">Half res EQ</option>
+              <option value="fifth">Fifth res EQ</option>
+              <option value="average x5">Average x5 res EQ</option>
+              <option value="average 4">Average 4 res EQ</option>
+              <option value="only 3">Only 3 res EQ</option>
+              <option value="no">Without EQ</option>
+            </select>
+            <button id="button_recordEQ">Record EQ</button>
+            <div><label for="number_delay">Frame rate for EQ:</label><input type="number" min="0" step="1" id="number_delay" style="width: 10ch"></div>
+            <div><label for="number_frame_delay_mult">Delay multiplier (Input * EQ resolution) in ms:</label><input type="number" min="0.5" value="1" id="number_frame_delay_mult" style="width: 10ch"></div>
+          <div><label for="color_baseColor">Base EQ color:</label><input type="color" value="#141414" id="color_baseColor"></div>
+          <div><label for="color_colorShift">EQ secondary color:</label><input type="color" value="#404040" id="color_colorShift"></div>
+        </div>
+        </details>
 
-      <div>
-        <label for="name">Name:&ThickSpace;&ThickSpace;</label>
-        <span id="name"></span>
-      </div>
+        <div>
+          <label for="name">Name:&ThickSpace;&ThickSpace;</label>
+          <span id="name"></span>
+        </div>
 
-      <div>
-        <label for="album">Album:&ThickSpace;&ThickSpace;</label>
-        <span id="album"></span>
-      </div>
+        <div>
+          <label for="album">Album:&ThickSpace;&ThickSpace;</label>
+          <span id="album"></span>
+        </div>
 
-      <table id="table_playlist_container" class="list">
-      </table>
+      </div>
+      <div id="playlist_container" class="scrollable">
+        <table id="table_playlist_container" class="list">
+        </table>
+      </div>
     </div>
     <div>
-      <div class="folder_overlay">
+      <div class="folder_overlay scrollable">
         <table id="table_folder_container" class="list recommend_container">
         </table>
       </div>
-      <div class="recommend_overlay">
+      <div class="recommend_overlay scrollable">
         <input type="search" id="search_music" class="search">
         <table id="table_recommend_container" class="list recommend_container">
         </table>
@@ -475,6 +488,7 @@
 			this.delayMult = 1;
 
       this.ondebugshowing = (event) => {};
+      this.externalAudio = null;
 			
 			this.canvasContext.fillStyle = "#000";
       this.canvasContext.fillRect(0, 0, this.WIDTH, this.HEIGHT);
@@ -623,6 +637,12 @@
     Equalizer.prototype.pinAnimation = function () {
       this.render = true;
     };
+    Equalizer.prototype.playExternal = function () {
+      const playSound = this.context.createBufferSource();
+      playSound.buffer = this.externalAudio;
+      playSound.connect(this.context.destination);
+      playSound.start(this.context.currentTime);
+    }
     Equalizer.prototype.checkStage = function () {
       //requestAnimationFrame(Equalizer.prototype.checkStage);
       const self = this;
@@ -757,12 +777,41 @@
       let champ = chopNameRaw(link, directorySeparation);
       let finalList = [];
       for (let i = 0; i < list.length; i++) {
-        finalList.push(champ + list[i]);
+        if(list[i].indexOf("http") === 0)
+          finalList.push(list[i]);
+        else finalList.push(champ + list[i]);
       }
       return finalList;
     }
 
-    function setMusicToPlay() {
+    function downloadMedia(link) {
+      return new Promise((resolve, reject) => {
+        console.log(link);
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', link, true);
+        xhr.responseType = 'blob';
+        
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            resolve(xhr.response);
+          } else {
+            reject(new Error('Failed to download media (not 200)'));
+          }
+        };
+  
+        xhr.onerror = function() {
+          reject(new Error('Failed to download media'));
+        };
+        
+        xhr.send();
+      });
+    }
+
+    function separateDomain(path = "") {
+      return (/(?:http(s)?:\/\/)[\w\.]+/).exec(path)[0];
+    }
+
+    async function setMusicToPlay() {
       if(eqRecord)
         handleEndRecords();
 
@@ -777,27 +826,37 @@
       let name = document.getElementById("name");
       let album = document.getElementById("album");
 
-      player.src = set;
-      name.innerText = convertLinkToName(set);
-      album.innerHTML = chopNameHTML(set, directorySeparation);
-      //startRender();
+      if(set.indexOf("http") === 0) {
+        // http handle
+        await downloadMedia(set)
+                .then(data => data.arrayBuffer())
+                .then(arrayBuffer => equalizer.context.decodeAudioData(arrayBuffer))
+                .then(decodedAudio => { this.externalAudio = decodedAudio; });
+        equalizer.playExternal();
+      }
+      else {
+        // local handle
+        player.src = set;
+        name.innerText = convertLinkToName(set);
+        album.innerHTML = chopNameHTML(set, directorySeparation);
+      }
     }
 
     async function selectMusicToPlay() {
       if (current !== -1) { // because of safety
-        if (globalList[current].match(/.*\.m3u8/)) { // list
+        if (globalList[current].match(/.*\.m3u(|8)/)) { // list
           console.log("list");
           playlist = await getListM3U8(globalList[current]);
           selected = 0;
           outputPlaylist(playlist);
         }
         else {
-          setMusicToPlay();
+          await setMusicToPlay();
           pushToList();
         }
       }
       else
-        setMusicToPlay();
+        await setMusicToPlay();
     }
     function nextMusic(player) {
       if (selected !== -1)
@@ -849,10 +908,10 @@
 
     // eqRenderStage
     function showCanvas() {
-      document.getElementById("equalizer_visualer").style.height = "30vh";
+      document.getElementById("equalizer_visualer").style.display = "inherit";
     }
     function hideCanvas() {
-      document.getElementById("equalizer_visualer").style.height = "1vh";
+      document.getElementById("equalizer_visualer").style.display = "none";
     }
     function initSelectorEQ() {
       let stage = localStorage.getItem("EQ_render_mode");
@@ -1010,7 +1069,7 @@
 
           const downloadLink = document.createElement("a");
           downloadLink.href = window.URL.createObjectURL(blob);
-          downloadLink.download = "playlist.m3u8"; // Specify the downloaded file name
+          downloadLink.download = `playlist.m3u${inWebMode ? "" : "8"}`; // Specify the downloaded file name
           downloadLink.click();
         })
         .catch(error => {
