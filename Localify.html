@@ -133,7 +133,6 @@
   .folder_overlay {
     margin: 5px;
     border: none;
-    border-top-left-radius: 10px;
   }
 
   #current_player_container {
@@ -141,7 +140,6 @@
     margin-top: 5px;
     border: none;
     border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
   }
 
   #equalizer_visualer {
@@ -182,6 +180,23 @@
     .list tr {
       width: calc(100vw - 30px);
     }
+    
+    .recommend_overlay {
+      border-radius: 10px;
+    }
+    
+    .folder_overlay {
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+    
+    #equalizer_visualer {
+      border-top-left-radius: 5px;
+    }
+    
+    #current_player_container {
+      border-top-left-radius: 10px;
+    }
   }
 
   @media screen and (min-aspect-ratio: 1/1) {
@@ -216,6 +231,7 @@
       min-height: 10vh;
       max-height: calc(50vh - 70px);
       width: calc(50vw - 20px);
+      border-top-left-radius: 10px;
     }
 
     .overlay {
@@ -232,6 +248,10 @@
 
     .list tr {
       width: calc(50vw - 20px - 25px);
+    }
+    
+    #current_player_container {
+      border-bottom-right-radius: 10px;
     }
   }
   
@@ -369,24 +389,24 @@
 
     function readFromFileURL(fileURL) {
       return new Promise((resolve, reject) => {
-        fetch(fileURL)
-          .then(response => response.blob())
-          .then(blob => {
-            const reader = new FileReader();
-            reader.onload = function (event) {
-              const text = event.target.result;
-              resolve(text);
-            };
-            reader.onerror = function (event) {
-              console.error("Error reading file:", event.target.error);
-              reject(event.target.error);
-            };
-            reader.readAsText(blob);
-          })
-          .catch(error => {
-            console.error("Error:", error);
-            reject(error);
-          });
+      fetch(fileURL)
+        .then(response => response.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            const text = event.target.result;
+            resolve(text);
+          };
+          reader.onerror = function (event) {
+            console.error("Error reading file:", event.target.error);
+            reject(event.target.error);
+          };
+          reader.readAsText(blob);
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          reject(error);
+        });
       });
     }
 
@@ -396,9 +416,9 @@
       const dots = filename.split(".");
       if (dots[dots.length - 1] !== "m3u8" && dots[dots.length - 1] !== "m3u") {
         let name = "";
-        for (let i = 0; i < dots.length - 1; i++) {
+        for (let i = 0; i < dots.length - 1; i++)
           name += dots[i];
-        }
+
         return name;
       }
       else {
@@ -668,57 +688,61 @@
       playSound.connect(this.context.destination);
       playSound.start(this.context.currentTime);
     }
+    Equalizer.prototype.doRecord = function(self) {
+      if (!eqRecord) return;
+      
+      let time = Intl.NumberFormat("en", {minimumFractionDigits:4}).format(self.player.currentTime);
+      arrauEqRecord.push([time]);
+      for(let i = 0; i < self.bufferLength; i++)
+        arrauEqRecord[arrauEqRecord.length - 1].push(self.dataArray[i]);
+    }
+    Equalizer.prototype.doFrame = function(self) {
+      switch (document.getElementById("select_eqRenderStage").value) {
+      case "full":
+        self.renderFullFrame();
+        break;
+      case "half":
+        self.renderSemiFrame();
+        break;
+      case "fifth":
+        self.renderFifthFrame();
+        break;
+      case "wave":
+        self.renderWaveFrame();
+        break;
+      case "average x5":
+        self.renderAverageX5Frame();
+        break;
+      case "average 4":
+        self.renderAverage4Frame();
+        break;
+      case "only 3":
+        self.renderOnly3Frame();
+        break;
+      case "no":
+      default:
+        self.unpinAnimation();
+        break;
+      }
+    }
     Equalizer.prototype.checkStage = function () {
       //requestAnimationFrame(Equalizer.prototype.checkStage);
       const self = this;
       const incheckStage = () => {
         self.scaleX = self.eq_visualizer.offsetWidth / 912;
         self.scaleY = self.eq_visualizer.offsetHeight / 276;
-        var stage = document.getElementById("select_eqRenderStage").value;
-        if (eqRecord) {
-          let time = Intl.NumberFormat("en", {minimumFractionDigits:4}).format(self.player.currentTime);
-          arrauEqRecord.push([time]);
-          for(let i = 0; i < self.bufferLength; i++)
-            arrauEqRecord[arrauEqRecord.length - 1].push(self.dataArray[i]);
-        }
-        switch (stage) {
-          case "full":
-            self.renderFullFrame();
-            break;
-          case "half":
-            self.renderSemiFrame();
-            break;
-          case "fifth":
-            self.renderFifthFrame();
-            break;
-          case "wave":
-            self.renderWaveFrame();
-            break;
-          case "average x5":
-            self.renderAverageX5Frame();
-            break;
-          case "average 4":
-            self.renderAverage4Frame();
-            break;
-          case "only 3":
-            self.renderOnly3Frame();
-            break;
-          case "no":
-          default:
-            self.unpinAnimation();
-            break;
-        }
+        self.doRecord(self);
+        self.doFrame(self);
         
-        if (self.render)
-          if(self.delay !== 0 && self.delay != Infinity) 
-						setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, self.delay);
-					else if(self.repeats)
-						setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, Math.min(self.repeatCount + 25,200));
-          else
-            setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, self.colomnWidth * self.delayMult);
-          
+        if (!self.render) return;
+        
+        if(self.delay !== 0 && self.delay != Infinity) 
+          setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, self.delay);
+        else if(self.repeats)
+          setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, Math.min(self.repeatCount + 25,200));
+        else
+          setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, self.colomnWidth * self.delayMult);
       }
-
 
       incheckStage();
     };
@@ -726,20 +750,6 @@
     
     // custom player
     // own made
-    /*
-      <div id="player_container">
-        <button id="player_play_pause"></button>
-        <input type="range" id="player_progress" step="0.1" value="0"></progress>
-        <label for="player_progress" id="player_time">
-          <span id="player_current_progress">0:00</span>
-            <span style="color:gray;"> / 
-              <span id="player_progress_limit">0:00</span>
-            </span>
-          </label>
-        <button id="player_volume_mute"></button>
-        <input type="range" id="player_volume_slider" name="volume" min="0" max="1" value="0.5" step="0.01" />
-      </div>
-    */
     function CustomPlayer() {
       this.player            = document.getElementById("player");
       this.playerContainer   = document.getElementById("player_container"); 
@@ -768,15 +778,19 @@
         this.player.currentTime = event.target.value;
       };
       
+      this.player.onplay = () => {
+        this.buttonPlayPause.innerText = "||";
+      }
+      
+      this.player.onpause = () => {
+        this.buttonPlayPause.innerText = ">";
+      }
+      
       this.buttonPlayPause.onclick = () => {
-        if(this.player.paused) {
-          this.buttonPlayPause.innerText = "||";
+        if(this.player.paused)
           this.player.play();
-        }
-        else {
-          this.buttonPlayPause.innerText = ">";
+        else
           this.player.pause();
-        }
       };
       
       this.playerTime.onclick = this.buttonPlayPause.onclick;
@@ -790,6 +804,7 @@
 
     // globals
     var current = 0
+    var foldLoadFormat = false;
     var globalList = [];
     var folderList = [];
     var playlist = [];
@@ -804,15 +819,15 @@
     const directorySeparation = '/';
 
     // player
+    function isInPlaylist() {
+      return current === -1;
+    }
+    
     async function getListM3U8(link = "") {
       let list = ((await readFromFileURL(link)).split('\n')).filter((value) => { return value[0] !== '#' && value; });
-      let champ = chopNameRaw(link, directorySeparation);
       let finalList = [];
-      for (let i = 0; i < list.length; i++) {
-        if(list[i].indexOf("http") === 0)
-          finalList.push(list[i]);
-        else finalList.push(champ + list[i]);
-      }
+      for (let i = 0; i < list.length; i++)
+        finalList.push(((list[i].indexOf("http") !== 0) ? chopNameRaw(link, directorySeparation) : "") + list[i]);
       return finalList;
     }
 
@@ -847,11 +862,7 @@
       if(eqRecord)
         handleEndRecords();
 
-      let set = "";
-      if (current === -1)
-        set = playlist[selected];
-      else
-        set = globalList[current];
+      let set = getCurrentMusicLink();
 
       console.log(set);
       let player = document.getElementById("player");
@@ -861,9 +872,9 @@
       if(set.indexOf("http") === 0) {
         // http handle
         await downloadMedia(set)
-                .then(data => data.arrayBuffer())
-                .then(arrayBuffer => equalizer.context.decodeAudioData(arrayBuffer))
-                .then(decodedAudio => { this.externalAudio = decodedAudio; });
+          .then(data => data.arrayBuffer())
+          .then(arrayBuffer => equalizer.context.decodeAudioData(arrayBuffer))
+          .then(decodedAudio => { this.externalAudio = decodedAudio; });
         equalizer.playExternal();
       }
       else {
@@ -871,12 +882,11 @@
         player.src = set;
         name.innerText = convertLinkToName(set);
         album.innerHTML = chopNameHTML(set, directorySeparation);
-        customPlayer.buttonPlayPause.onclick();
       }
     }
 
     async function selectMusicToPlay() {
-      if (current !== -1) { // because of safety
+      if (!isInPlaylist()) { // because of safety
         if (globalList[current].match(/.*\.m3u(|8)/)) { // list
           console.log("list");
           playlist = await getListM3U8(globalList[current]);
@@ -897,14 +907,11 @@
       if (selected < playlist.length && selected !== -1) {
         selectMusicToPlay(playlist[selected]);
         equalizer.context.resume();
-        document.getElementById("player").play();
+        customPlayer.buttonPlayPause.onclick();
       }
     }
     function getCurrentMusicLink() {
-      if (current === -1)
-        return playlist[selected];
-      else
-        return globalList[current];
+      return isInPlaylist() ? playlist[selected] : globalList[current];
     }
     function setVolume() {
       if (localStorage.getItem("volume")) {
@@ -929,7 +936,6 @@
     }
     
     document.getElementById("player_volume_slider").onchange = handleChangedVolumeCommonPlayer;
-    //document.getElementById("player").onvolumechange = handleChangedVolumeBuildInPlayer;
     document.getElementById("player").onended = nextMusic;
     document.onplaying = equalizer.checkStage;
 
@@ -937,16 +943,13 @@
     function selectRandomMusic() {
       let table = document.getElementById("table_recommend_container");
       table.children[0].children[getRandomInt(table.children[0].children.length)].click();
-      /*selected = -1;
-      selectMusicToPlay();
-      equalizer.context.resume();
-      document.getElementById("player").play();*/
     }
     document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
 
     // eqRenderStage
     function showCanvas() {
       document.getElementById("equalizer_visualer").style.display = "inherit";
+      equalizer.pinAnimation();
     }
     function hideCanvas() {
       document.getElementById("equalizer_visualer").style.display = "none";
@@ -960,13 +963,10 @@
         hideCanvas();
       }
       else {
-        if (stage !== "no") {
-          equalizer.pinAnimation();
+        if (stage !== "no")
           showCanvas();
-        }
-        else {
+        else
           hideCanvas();
-        }
         target.value = stage;
       }
     }
@@ -975,7 +975,6 @@
       localStorage.setItem("EQ_render_mode", val);
       if (val !== "no" && !equalizer.render) {
         showCanvas();
-        equalizer.pinAnimation();
         equalizer.checkStage();
       }
       else if (equalizer.render && val === "no")
@@ -1036,9 +1035,8 @@
       let promises = [];
 
       songLinks.forEach(link => {
-        if (inWebMode) {
+        if (inWebMode)
           totalDuration.push(5);
-        }
         else {
           let audio = new Audio();
 
@@ -1050,9 +1048,7 @@
               resolve();
             };
 
-            audio.onerror = () => {
-              reject(`Error loading ${link}`);
-            };
+            audio.onerror = () => reject(`Error loading ${link}`);
           });
 
           promises.push(promise);
@@ -1092,36 +1088,40 @@
       }
       return `${path}/${pathMusic}`;
     }
+    function writeRowM3U8(totalDuration) {
+      let res = "";
+      for (let i = 0; i < playlist.length; i++)
+        res += `#EXFINF:${Math.ceil(totalDuration[i])},${chopLocDirRaw(playlist[i], directorySeparation)} - ${convertLinkToName(playlist[i])}\n${inWebMode ? convertMusicLinkToWeb(playlist[i]) : playlist[i]}\n`;
+      return res;
+    }
     function formM3U8() {
       let resFile = "#EXTM3U\n";
       let leng = [];
 
       return getSongDurations(playlist)
-        .then(totalDuration => {
-          for (let i = 0; i < playlist.length; i++) {
-            resFile += `#EXFINF:${Math.ceil(totalDuration[i])},${chopLocDirRaw(playlist[i], directorySeparation)} - ${convertLinkToName(playlist[i])}\n${inWebMode ? convertMusicLinkToWeb(playlist[i]) : playlist[i]}\n`;
-          }
+      .then(totalDuration => {
+        resFile += writeRowM3U8(totalDuration);
 
-          return resFile;
-        })
-        .catch(error => {
-          throw error;
-        });
+        return resFile;
+      })
+      .catch(error => {
+        throw error;
+      });
     }
 
     function downloadPlaylist() {
       formM3U8()
-        .then(str => {
-          const blob = new Blob([str], { type: "text/plain" });
+      .then(str => {
+        const blob = new Blob([str], { type: "text/plain" });
 
-          const downloadLink = document.createElement("a");
-          downloadLink.href = window.URL.createObjectURL(blob);
-          downloadLink.download = `playlist.m3u${inWebMode ? "" : "8"}`; // Specify the downloaded file name
-          downloadLink.click();
-        })
-        .catch(error => {
-          console.error(error);
-        });
+        const downloadLink = document.createElement("a");
+        downloadLink.href = window.URL.createObjectURL(blob);
+        downloadLink.download = `playlist.m3u${inWebMode ? "" : "8"}`; // Specify the downloaded file name
+        downloadLink.click();
+      })
+      .catch(error => {
+        console.error(error);
+      });
     }
     document.getElementById("button_downloadPlaylist").onclick = downloadPlaylist;
 
@@ -1136,12 +1136,9 @@
       let str = "";
 
       for (let i = 0; i < arrauEqRecord.length; i++) {
-        for (let j = 0; j < arrauEqRecord[i].length; j++) {
-          str += arrauEqRecord[i][j];
-          if(j < arrauEqRecord[i].length - 1)
-            str += `\t`
-        }
-        str+= "\n";
+        for (let j = 0; j < arrauEqRecord[i].length; j++)
+          str += (j < arrauEqRecord[i].length - 1) ? `${arrauEqRecord[i][j]}\t` : arrauEqRecord[i][j];
+        str += "\n";
       }
 
       arrauEqRecord = [];
@@ -1152,14 +1149,14 @@
       URL.revokeObjectURL(blob);
     }
     function startRecordingEQ() {
-      if(confirm("You sure? (recording of equalizer would take storage and performance)")) {
-        document.getElementById("player").onended = handleEndRecords;
-        console.log("recording...");
-        arrauEqRecord = [];
-        eqRecord = true;
-        document.getElementById("player").currentTime = 0;
-        document.getElementById("player").play();
-      }
+      if(!confirm("You sure? (recording of equalizer would take storage and performance)")) return;
+      
+      document.getElementById("player").onended = handleEndRecords;
+      console.log("recording...");
+      arrauEqRecord = [];
+      eqRecord = true;
+      document.getElementById("player").currentTime = 0;
+      document.getElementById("player").play();
     }
     document.getElementById("button_recordEQ").onclick = startRecordingEQ;
 
@@ -1168,9 +1165,8 @@
       for (let i = 0; i < globalList.length; i++) {
         let chopped = chopNameRaw(globalList[i], directorySeparation);
 
-        if (folderList.findIndex((sth) => chopped === sth) === -1) {
+        if (folderList.findIndex((sth) => chopped === sth) === -1)
           folderList.push(chopped);
-        }
       }
     }
 
@@ -1206,14 +1202,11 @@
         selected = -1;
       }
 
-      selectMusicToPlay();
-      equalizer.context.resume();
-      document.getElementById("player").play();
+      forcePlay();
     }
     function selectElementsAndOutputIndexes(list, searchString, toLowerCase = false) {
       const indexes = [];
       list.forEach((element, index) => {
-
         if ((toLowerCase ? element.toLowerCase() : element).indexOf((toLowerCase ? searchString.toLowerCase() : searchString)) !== -1)
           indexes.push(index);
       });
@@ -1265,12 +1258,8 @@
       }
     }
     function outputPlaylist(list = []) {
-      if(list.length === 0) {
-        document.getElementById("playlist_placeholder").style.display = "inherit";
-      }
-      else {
-        document.getElementById("playlist_placeholder").style.display = "none";
-      }
+      document.getElementById("playlist_placeholder").style.display = (list.length === 0) ? "inherit" : "none";
+
       let table = document.getElementById("table_playlist_container");
       let colomn = table.getElementsByTagName("tr")[0];
       colomn.innerHTML = "";
