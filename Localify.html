@@ -71,6 +71,10 @@
     width: 100%;
     background-color: #222;
   }
+  
+  .slider {
+    vertical-align: middle;
+  }
 
   .folder {
     background-color: #deb616;
@@ -249,7 +253,7 @@
   }
   
   #player_progress {
-    width: calc(100% -  36ch); 
+    width: calc(100% -  36ch);
   }
   
   #player_play_pause {
@@ -258,6 +262,14 @@
   
   #player_volume_slider {
     margin-right: 10px;
+  }
+  
+  #playlist_placeholder {
+    text-align: center;
+    width: 100%;
+    padding: 15vh 0;
+    color: #555;
+    font-size: 5vh;
   }
 </style>
 
@@ -272,7 +284,7 @@
         <div id="player_container">
           <div id="player_inner">
             <button id="player_play_pause">&gt;</button>
-            <input type="range" id="player_progress" step="0.1" value="0" min="0"></progress>
+            <input type="range" id="player_progress" step="0.1" value="0" min="0" class="slider"></progress>
             <label for="player_progress" id="player_time">
               <span id="player_current_progress">0:00</span>
                 <span style="color:gray;"> / 
@@ -287,12 +299,13 @@
         <audio id="player"></audio>
 
         <div>
-          <button id="button_previous">Previous</button>
-          <button id="button_next">Next</button>
-          <button id="button_push">Push to list</button>
-          <button id="button_pop">Pop from list</button>
-          <button id="button_clear">Clear list</button>
-          <button id="button_chooseRandomly">Choose Randomly</button>
+          <button id="button_previous">&lt;|</button>
+          <button id="button_inPlaylist">\/</button>
+          <button id="button_next">|&gt;</button>
+          <button id="button_push">+ list</button>
+          <button id="button_pop">- list</button>
+          <button id="button_clear">clear list</button>
+          <button id="button_chooseRandomly">random pick</button>
         </div>
         <details id="settings_container" style="background-color: #555; padding-top: 1ch; padding-bottom: 1ch">
           <summary>Settings</summary>
@@ -328,6 +341,7 @@
 
       </div>
       <div id="playlist_container" class="scrollable">
+        <div id="playlist_placeholder">Emply list</div>
         <table id="table_playlist_container" class="list">
         </table>
       </div>
@@ -755,14 +769,21 @@
       };
       
       this.buttonPlayPause.onclick = () => {
-        if(this.player.paused) this.player.play();
-        else this.player.pause();
+        if(this.player.paused) {
+          this.buttonPlayPause.innerText = "||";
+          this.player.play();
+        }
+        else {
+          this.buttonPlayPause.innerText = ">";
+          this.player.pause();
+        }
       };
       
       this.playerTime.onclick = this.buttonPlayPause.onclick;
       
       this.buttonMute.onclick = () => {
         this.player.muted = !this.player.muted;
+        this.buttonMute.innerText = (this.player.muted) ? "M" : "V";
       };
     }
 
@@ -850,6 +871,7 @@
         player.src = set;
         name.innerText = convertLinkToName(set);
         album.innerHTML = chopNameHTML(set, directorySeparation);
+        customPlayer.buttonPlayPause.onclick();
       }
     }
 
@@ -899,6 +921,11 @@
       let playerVolume = player.target.volume;
       localStorage.setItem("volume", playerVolume);
       setVolume();
+    }
+    function forcePlay() {
+      selectMusicToPlay();
+      equalizer.context.resume();
+      customPlayer.buttonPlayPause.onclick();
     }
     
     document.getElementById("player_volume_slider").onchange = handleChangedVolumeCommonPlayer;
@@ -971,6 +998,15 @@
       }
     }
     document.getElementById("button_previous").onclick = previousMusic;
+
+    // get to list 
+    function getToList() {
+      selected = 0;
+      current = -1;
+      
+      forcePlay();
+    }
+    document.getElementById("button_inPlaylist").onclick = getToList;
 
     // push to list
     function pushToList() {
@@ -1229,6 +1265,12 @@
       }
     }
     function outputPlaylist(list = []) {
+      if(list.length === 0) {
+        document.getElementById("playlist_placeholder").style.display = "inherit";
+      }
+      else {
+        document.getElementById("playlist_placeholder").style.display = "none";
+      }
       let table = document.getElementById("table_playlist_container");
       let colomn = table.getElementsByTagName("tr")[0];
       colomn.innerHTML = "";
