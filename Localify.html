@@ -8,6 +8,10 @@
 </head>
 
 <style>
+  :root {
+    --offset-playlist-size: 0px;
+  }
+  
   @font-face {
     font-family: "Roboto Medium";
     src: url("./Roboto-Medium.ttf");
@@ -117,7 +121,7 @@
   }
 
   #playlist_container {
-    height: calc(100% - (30vh + 70px + 10ch));
+    height: calc(100% - (var(--offset-playlist-size) + 70px + 10ch));
     margin-top: 5px;
     margin-bottom: 5px;
   }
@@ -403,13 +407,20 @@
       let split = link.split(splitBy);
       return split[split.length - 2];
     }
-
+    
+    function getSharedFolders(list = []) {
+      let sharedFolderList = [];
+      
+      
+      
+    }
+    
     function chopNameHTML(link = "", splitBy = '') {
       let split = link.split(splitBy);
       whatever = "";
       for (let index = 0; index < split.length - 1; index++) {
         const element = split[index];
-        if (element !== "..")
+        if (element !== ".." && element !== ".")
           whatever += "<span class=\"folder\">" + element + "</span> ";
       }
       return whatever;
@@ -875,8 +886,8 @@
     }
     function setVolume() {
       if (localStorage.getItem("volume")) {
-        document.getElementById("player").volume = localStorage.getItem("volume");
         document.getElementById("player_volume_slider").value = localStorage.getItem("volume");
+        document.getElementById("player").volume = localStorage.getItem("volume") * localStorage.getItem("volume");
       }
     }
     function handleChangedVolumeCommonPlayer(player) {
@@ -891,7 +902,7 @@
     }
     
     document.getElementById("player_volume_slider").onchange = handleChangedVolumeCommonPlayer;
-    document.getElementById("player").onvolumechange = handleChangedVolumeBuildInPlayer;
+    //document.getElementById("player").onvolumechange = handleChangedVolumeBuildInPlayer;
     document.getElementById("player").onended = nextMusic;
     document.onplaying = equalizer.checkStage;
 

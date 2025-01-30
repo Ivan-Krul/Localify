@@ -1,10 +1,6 @@
 Set-Location $PSScriptRoot
 Clear-Host
 
-$PATH_TOCHECKOUT = "pathToCheckItOut.txt"
-$PATH_IGNORE = "ignore.txt"
-$OUT_FILE = "fold_content.txt"
-
 function Write-List
 {
     param
@@ -92,58 +88,6 @@ function Parse-Ignore
     return $filteredFiles
 }
 
-# 0 \t ../../music
-# 1 \t ../../music/pl
-# 2 \t ../../music/pl/core
-# 3 \t ../../music/sp
-# 
-# 0 \t soc.mp3
-# 0 \t cl.mp3
-# 1 \t folk.opus
-# 2 \t cap.wav
-# 3 \t ey.mp3
-function Write-Shrinked {
-  param(
-    [string[]]$filePaths
-  )
-  
-  $dirs = @()
-  $itmRes = ""
-  $mus = ""
-  $dirLay = ""
-  $isDirLayUsed = $false
-  
-  foreach($file in $files)
-  {
-    $mus = $file -replace ".*(/|\\)"
-    $dirLay = $file.substring(0, $file.Length - $mus.Length)
-    $isDirLayUsed = $false
-  
-    for($i = 0; $i -lt $dirs.Length; $i += 1) {
-      $dir = $dirs[$i]
-      
-      if($dirLay -contains $dir) {
-        $isDirLayUsed = $true
-        $itmRes += "$i`t$mus`n"
-        break
-      }
-    }
-    
-    if($isDirLayUsed) { continue }
-    
-    $dirs += $dirLay
-    $itmRes += "$($dirs.Length - 1)`t$mus`n"
-  }
-  
-  $dirRes = ""
-  
-  for($i = 0; $i -lt $dirs.Length; $i += 1) {
-    $dirRes += "$i`t$($dirs[$i])`n"
-  }
-  
-  return "$dirRes`n$itmRes"
-}
-
 function Write-FileSize
 {
     param(
@@ -159,16 +103,21 @@ function Write-FileSize
 }
 
 $location = Get-Location
-$allFiles = Check-AdditionalDirectories $location.Path $PATH_TOCHECKOUT
-$files = Parse-Ignore $PATH_IGNORE $allFiles
+$allFiles = Check-AdditionalDirectories $location.Path "pathToCheckItOut.txt"
+$files = Parse-Ignore "ignore.txt" $allFiles
 
-$filePaths = (Write-Shrinked $files) -replace "\\", "/"
+New-Item "content.txt" -Force
 
-if(Test-Path $OUT_FILE) {
-  Out-File -FilePath $OUT_FILE -InputObject $filePaths
+$totalSize = 0
+$filePath = ""
+foreach($file in $files)
+{
+    $prop = Get-Item $file
+    $totalSize += $prop.Length
+
+	$resFilePath = $file -replace "\\", "/"
+	$resFilePath >> "content.txt"
 }
-else {
-  New-Item $OUT_FILE -Type File -Value $filePaths -Force
-}
-Write-Host "Count of file(s): $($files.Length)"
+
+Write-FileSize $totalSize
 Pause
