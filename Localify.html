@@ -163,6 +163,12 @@
     border: 1px solid grey;
     border-radius: 5px;
   }
+  
+  .prevent-select {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+  }
 
   #search_music {
     width: 100%;
@@ -350,12 +356,12 @@
         </details>
 
         <div>
-          <label for="name">Name:&ThickSpace;&ThickSpace;</label>
+          <label for="name" class="prevent-select">Name:&ThickSpace;&ThickSpace;</label>
           <span id="name"></span>
         </div>
 
         <div>
-          <label for="album">Album:&ThickSpace;&ThickSpace;</label>
+          <label for="album" class="prevent-select">Album:&ThickSpace;&ThickSpace;</label>
           <span id="album"></span>
         </div>
 
@@ -421,10 +427,7 @@
 
         return name;
       }
-      else {
-        console.log("list");
-        return filename;
-      }
+      else return filename;
     }
 
     function chopNameRaw(link = "", splitBy = '') {
@@ -475,10 +478,10 @@
     }
 
 		function arraysEqual(a, b) {
-			if (a === b) return true;
 			if (a == null || b == null) return false;
 			if (a.length !== b.length) return false;
-			
+			if (a === b) return true;
+      
 			for (var i = 0; i < a.length; ++i) {
 				if (a[i] !== b[i]) return false;
 			}
@@ -521,7 +524,7 @@
       this.scaleX = this.eq_visualizer.offsetWidth;
       this.scaleY = this.eq_visualizer.offsetHeight;
 			
-			this.prevDataArray = new Uint8Array(this.bufferLength);
+			this.prevDataArray = new Uint8Array(5);
 			this.repeats = false;
       this.repeatCount = 0;
 
@@ -533,10 +536,38 @@
 			this.delayMult = 1;
 
       this.ondebugshowing = (event) => {};
-      this.externalAudio = null;
 			
 			this.canvasContext.fillStyle = "#000";
       this.canvasContext.fillRect(0, 0, this.WIDTH, this.HEIGHT);
+      this.colors = [];
+      
+      //this.fpsCounter = new FPSCounter();
+      this.renderLength = this.bufferLength * 0.8;
+      this.currentRes = -1;
+    }
+
+    Equalizer.prototype.setResolution = function (res) {
+      switch (res) {
+      case "full": this.currentRes = 0; break;
+      case "half": this.currentRes = 1; break;
+      case "fifth": this.currentRes = 2; break;
+      case "average x5": this.currentRes = 3; break;
+      case "average 4": this.currentRes = 4; break;
+      case "only 3": this.currentRes = 5; break;
+      case "no":
+      default: this.currentRes = -1; break;
+      }
+    }
+
+    Equalizer.prototype.preComputateColors = function () {
+      this.colors = [];
+      for(let i = 0; i < 256; i++)
+        this.colors.push(
+          rgbToHex({
+            r: (i / 256.0) * (this.baseColorTo.r - this.baseColorFrom.r) + this.baseColorFrom.r,
+            g: (i / 256.0) * (this.baseColorTo.g - this.baseColorFrom.g) + this.baseColorFrom.g,
+            b: (i / 256.0) * (this.baseColorTo.b - this.baseColorFrom.b) + this.baseColorFrom.b
+            }));
     }
 
     Equalizer.prototype.getAnimationRequester = function () {
@@ -546,14 +577,21 @@
     Equalizer.prototype.startFrame = function (collect = true) {
       this.x = 0;
 			
-			for(let i = 0; i < this.dataArray.length; i++) {
-				this.prevDataArray[i] = this.dataArray[i];
-			}
+      this.prevDataArray[0] = this.dataArray[0];
+      this.prevDataArray[1] = this.dataArray[3];
+      this.prevDataArray[2] = this.dataArray[15];
+      this.prevDataArray[3] = this.dataArray[32];
+      this.prevDataArray[4] = this.dataArray[64];
 			
       if (collect)
         this.analyser.getByteFrequencyData(this.dataArray);
 
-			this.repeats = arraysEqual(this.dataArray,this.prevDataArray);
+			this.repeats = 
+        this.dataArray[0] == this.prevDataArray[0] && 
+        this.dataArray[3] == this.prevDataArray[1] && 
+        this.dataArray[15] == this.prevDataArray[2] && 
+        this.dataArray[32] == this.prevDataArray[3] && 
+        this.dataArray[64] == this.prevDataArray[4];
 
 			if(this.repeats) {this.repeatCount++; return;}
 			
@@ -565,29 +603,28 @@
 
     Equalizer.prototype.colorCanvasRectange = function (width) {
 			this.colomnWidth = width;
+      
       var fraq = (this.barHeight / 256.0);
+      var bh = fraq * this.HEIGHT;
 
-      var r = fraq * (this.baseColorTo.r - this.baseColorFrom.r) + this.baseColorFrom.r;
-      var g = fraq * (this.baseColorTo.g - this.baseColorFrom.g) + this.baseColorFrom.g;
-      var b = fraq * (this.baseColorTo.b - this.baseColorFrom.b) + this.baseColorFrom.b;
-      const amplitude = 3.5;
-
-      let bh = fraq * this.HEIGHT;
-
-      if(this.HEIGHT - bh < 0)
-        console.log(this.HEIGHT - bh);
-
-      this.canvasContext.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+      this.canvasContext.fillStyle = this.colors[this.barHeight];
       this.canvasContext.fillRect(this.x, this.HEIGHT - bh, this.barWidth * width, bh);
 
       this.x += this.barWidth * width - 1;
     };
 
+    Equalizer.prototype.renderBars = function (barW) {
+      for (let i = 0; i < this.renderLength; i += barW) {
+        this.barHeight = this.dataArray[i];
+        this.colorCanvasRectange(barW);
+      }
+    }
+
     Equalizer.prototype.renderFullFrame = function () {
       this.startFrame();
 			if(this.repeats) return;
 
-      for (let i = 0; i < this.bufferLength * 0.8; i++) {
+      for (let i = 0; i < this.renderLength; i++) {
         this.barHeight = this.dataArray[i];
         this.colorCanvasRectange(1);
       }
@@ -597,39 +634,23 @@
       this.startFrame();
 			if(this.repeats) return;
 
-      for (let i = 0; i < this.bufferLength * 0.8; i += 2) {
-        this.barHeight = this.dataArray[i];
-        this.colorCanvasRectange(2);
-      }
+      this.renderBars(2);
     };
 
     Equalizer.prototype.renderFifthFrame = function () {
       this.startFrame();
 			if(this.repeats) return;
 
-      for (let i = 0; i < this.bufferLength * 0.8; i += 5) {
-        this.barHeight = this.dataArray[i];
-        this.colorCanvasRectange(5);
-      }
-    };
-
-    Equalizer.prototype.renderWaveFrame = function () {
-      this.startFrame();
-			if(this.repeats) return;
-
-      for (let i = 0; i < this.bufferLength * 0.8; i += 5) {
-        this.barHeight = this.dataArray[i];
-        this.colorCanvasRectange(5);
-      }
+      this.renderBars(5);
     };
 
     Equalizer.prototype.renderAverageX5Frame = function () {
       this.startFrame();
 			if(this.repeats) return;
 
-      for (let i = 0; i < this.bufferLength * 0.8; i++) {
+      for (let i = 0; i < this.renderLength; i++) {
         this.barHeight += this.dataArray[i];
-        if (i % 5 === 4) {
+        if (i % 5 == 4) {
           this.barHeight /= 5;
           this.colorCanvasRectange(5);
           this.barHeight = 0;
@@ -646,15 +667,15 @@
       var currentBorder = border;
       this.barHeight = 0;
 
-      for (let i = 0; i < this.bufferLength * 0.8; i++) {
-        if (i < currentBorder && (i + 1) < this.bufferLength * 0.8) {
+      for (let i = 0; i < this.renderLength; i++) {
+        if (i < currentBorder && (i + 1) < this.renderLength) {
           this.barHeight += this.dataArray[i];
           count++;
         }
         else {
           this.barHeight /= count;
           count = 0;
-          this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 4));
+          this.colorCanvasRectange(Math.floor(this.renderLength / 4));
           currentBorder = border + currentBorder * 5;
           this.barHeight = 0;
         }
@@ -668,11 +689,11 @@
 			if(this.repeats) return;
 
       this.barHeight = this.dataArray[0];
-      this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+      this.colorCanvasRectange(Math.floor(this.renderLength / 3));
       this.barHeight = this.dataArray[3];
-      this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+      this.colorCanvasRectange(Math.floor(this.renderLength / 3));
       this.barHeight = this.dataArray[32];
-      this.colorCanvasRectange(Math.floor(this.bufferLength * 0.8 / 3));
+      this.colorCanvasRectange(Math.floor(this.renderLength / 3));
     };
 
     Equalizer.prototype.unpinAnimation = function () {
@@ -682,12 +703,6 @@
     Equalizer.prototype.pinAnimation = function () {
       this.render = true;
     };
-    Equalizer.prototype.playExternal = function () {
-      const playSound = this.context.createBufferSource();
-      playSound.buffer = this.externalAudio;
-      playSound.connect(this.context.destination);
-      playSound.start(this.context.currentTime);
-    }
     Equalizer.prototype.doRecord = function(self) {
       if (!eqRecord) return;
       
@@ -697,34 +712,24 @@
         arrauEqRecord[arrauEqRecord.length - 1].push(self.dataArray[i]);
     }
     Equalizer.prototype.doFrame = function(self) {
-      switch (document.getElementById("select_eqRenderStage").value) {
-      case "full":
-        self.renderFullFrame();
-        break;
-      case "half":
-        self.renderSemiFrame();
-        break;
-      case "fifth":
-        self.renderFifthFrame();
-        break;
-      case "wave":
-        self.renderWaveFrame();
-        break;
-      case "average x5":
-        self.renderAverageX5Frame();
-        break;
-      case "average 4":
-        self.renderAverage4Frame();
-        break;
-      case "only 3":
-        self.renderOnly3Frame();
-        break;
-      case "no":
-      default:
-        self.unpinAnimation();
-        break;
+      if (self.currentRes === -1) {
+          self.unpinAnimation();
+          return;
       }
-    }
+
+      const renderMethods = [
+          self.renderFullFrame,
+          self.renderSemiFrame,
+          self.renderFifthFrame,
+          self.renderAverageX5Frame,
+          self.renderAverage4Frame,
+          self.renderOnly3Frame // Fixed typo
+      ];
+
+      const renderFunc = renderMethods[self.currentRes];
+      if (renderFunc) renderFunc.call(self);
+    };
+
     Equalizer.prototype.checkStage = function () {
       //requestAnimationFrame(Equalizer.prototype.checkStage);
       const self = this;
@@ -734,9 +739,14 @@
         self.doRecord(self);
         self.doFrame(self);
         
+        //this.fpsCounter.requestAnimFrame();
+        //console.log(this.fpsCounter.averageFPS);
+        
         if (!self.render) return;
         
-        if(self.delay !== 0 && self.delay != Infinity) 
+        //if(self.delay < 0.1)
+        //  self.req = requestAnimationFrame(incheckStage);
+        if(self.delay != 0 && self.delay != Infinity)
           setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, self.delay);
         else if(self.repeats)
           setTimeout(function() {self.req = requestAnimationFrame(incheckStage);}, Math.min(self.repeatCount + 25,200));
@@ -801,6 +811,27 @@
       };
     }
 
+    function FPSCounter() {
+      this.averageFPS = 0;
+      this.step = 100;
+      this.lastCalledTime;
+      this.fps;
+      this.delta;
+    }
+    
+    FPSCounter.prototype.requestAnimFrame = function () {
+      if(!this.lastCalledTime) {
+         this.lastCalledTime = Date.now();
+         this.fps = 0;
+         return;
+      }
+      this.delta = (Date.now() - this.lastCalledTime)/1000;
+      this.lastCalledTime = Date.now();
+      this.fps = 1/this.delta;
+      this.averageFPS += (this.fps - this.averageFPS) / this.step;
+    }
+    
+
 
     // globals
     var current = 0
@@ -831,33 +862,6 @@
       return finalList;
     }
 
-    function downloadMedia(link) {
-      return new Promise((resolve, reject) => {
-        console.log(link);
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', link, true);
-        xhr.responseType = 'blob';
-        
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            resolve(xhr.response);
-          } else {
-            reject(new Error('Failed to download media (not 200)'));
-          }
-        };
-  
-        xhr.onerror = function() {
-          reject(new Error('Failed to download media'));
-        };
-        
-        xhr.send();
-      });
-    }
-
-    function separateDomain(path = "") {
-      return (/(?:http(s)?:\/\/)[\w\.]+/).exec(path)[0];
-    }
-
     async function setMusicToPlay() {
       if(eqRecord)
         handleEndRecords();
@@ -871,11 +875,9 @@
 
       if(set.indexOf("http") === 0) {
         // http handle
-        await downloadMedia(set)
-          .then(data => data.arrayBuffer())
-          .then(arrayBuffer => equalizer.context.decodeAudioData(arrayBuffer))
-          .then(decodedAudio => { this.externalAudio = decodedAudio; });
-        equalizer.playExternal();
+        player.src = set;
+        name.innerText = `${convertLinkToName(set)} (This music can not play)`;
+        album.innerHTML = chopNameHTML(set, directorySeparation);
       }
       else {
         // local handle
@@ -941,22 +943,30 @@
 
     // choose randomly
     function selectRandomMusic() {
-      let table = document.getElementById("table_recommend_container");
-      table.children[0].children[getRandomInt(table.children[0].children.length)].click();
+      let trC = document.getElementById("table_recommend_container").children[0].children[0].children;
+      
+      trC[getRandomInt(trC.length)].click();
     }
     document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
 
     // eqRenderStage
     function showCanvas() {
+      document.documentElement.style.setProperty('--offset-playlist-size', document.getElementById("settings_container").open ? `calc(${document.getElementById("settings_container").offsetHeight} + 30vh)` : `30vh`);
+      
       document.getElementById("equalizer_visualer").style.display = "inherit";
       equalizer.pinAnimation();
     }
     function hideCanvas() {
+      document.documentElement.style.setProperty('--offset-playlist-size', document.getElementById("settings_container").open ? document.getElementById("settings_container").offsetHeight : "0px");
+    
       document.getElementById("equalizer_visualer").style.display = "none";
     }
     function initSelectorEQ() {
       let stage = localStorage.getItem("EQ_render_mode");
       let target = document.getElementById("select_eqRenderStage");
+      
+      equalizer.setResolution(target.value);
+      
       if (stage === undefined) {
         target.value = "no";
         localStorage.setItem("EQ_render_mode", "no");
@@ -973,6 +983,8 @@
     function checkStatus(target) {
       let val = target.target.value;
       localStorage.setItem("EQ_render_mode", val);
+      equalizer.setResolution(val);
+      
       if (val !== "no" && !equalizer.render) {
         showCanvas();
         equalizer.checkStage();
@@ -1171,7 +1183,7 @@
     }
 
     // table
-    function setTable(rows, instance) {
+    /*function setTable(rows, instance) {
       let tableRec = instance;
 
       let tr = document.createElement("tr");
@@ -1191,6 +1203,11 @@
         tr.append(td);
       }
       tablePl.append(tr);
+    }*/
+    function initTables() {
+      document.getElementById("table_folder_container").innerHTML += "<tr></tr>";
+      document.getElementById("table_recommend_container").innerHTML += "<tr></tr>";
+      document.getElementById("table_playlist_container").innerHTML += "<tr></tr>";
     }
     function handleClickToCell(event) {
       if (event.target.index !== undefined) {
@@ -1288,14 +1305,16 @@
     document.getElementById("search_music").oninput = searchMusicByName;
 
     // key binding
-    /*document.addEventListener('keypress', e => {
-      if (e.which === ' '.charCodeAt(0)) {
+    window.onkeydown = e => {
+      if (e.keyCode == 32 && e.target == document.body) {
+        e.preventDefault();
         if(document.getElementById("player").paused)
           document.getElementById("player").play();
         else
           document.getElementById("player").pause();
+        return false;
       }
-    });*/
+    };
 
     // color settings from localStorage
     function hexToRgb(hex) {
@@ -1328,6 +1347,8 @@
 
       document.getElementById("color_baseColor").value = colorSettings.baseColor;
       document.getElementById("color_colorShift").value = colorSettings.colorShift;
+      
+      equalizer.preComputateColors();
     }
 
     function handleColorPick() {
@@ -1343,6 +1364,7 @@
       equalizer.baseColorTo   = normShift;
 
       localStorage.setItem("colors_for_EQ", JSON.stringify(colorSettings));
+      equalizer.preComputateColors();
     }
     document.getElementById("color_baseColor").onchange = handleColorPick;
     document.getElementById("color_colorShift").onchange = handleColorPick;
@@ -1362,21 +1384,63 @@
 		}
 		document.getElementById("number_frame_delay_mult").onchange = changeDelayMultiplier;
 
+    // list loading
+    function parseFoldList(str = "") {
+      let l = 0;
+      let lines = str.split("\n");
+      
+      folderList = [];
+      globalList = [];
+      
+      while(lines[l] !== "") { folderList.push(lines[l]); l++; }
+      
+      if(l >= lines.length) {
+        console.error("music list is empty");
+        return;
+      }
+      
+      l++;
+      
+      while (lines[l] !== "") {
+        const line = lines[l];
+        var foldrIndx = line.substr(0, line.indexOf('\t'));
+        var musicName = line.substr(foldrIndx.length + 1);
+        
+        globalList.push(`${folderList[foldrIndx]}${musicName}`);
+        l++;
+      }
+      
+    }
+    
+    async function loadLists() {
+      let file = await readFromFileURL("./fold_content.txt");
+      if (file.length) {
+        foldLoadFormat = true;
+        
+        parseFoldList(file);
+      }
+      else {
+        globalList = (await readFromFileURL("./content.txt"))
+          .split("\n")
+          .filter(function (element) {
+            return element;
+          });
+          
+        createFolderList();
+      }
+    }
+
     // end
     (async () => {
-      globalList = (await readFromFileURL("./content.txt"))
-        .split("\n")
-        .filter(function (element) {
-          return element;
-        });
+      await loadLists();
 
-      setTable(0, document.getElementById("table_recommend_container"));
-      setTable(0, document.getElementById("table_folder_container"));
-      createFolderList();
+      initTables();
+      
       setVolume();
       getColorFromLocalStorage();
       initSelectorEQ();
       equalizer.checkStage();
+      
       foldAllFolders(folderList);
       outputRecommends(globalList);
       forceChangeFrameRate(document.getElementById("number_delay").value);

@@ -138,24 +138,10 @@ function Write-Shrinked {
   $dirRes = ""
   
   for($i = 0; $i -lt $dirs.Length; $i += 1) {
-    $dirRes += "$i`t$($dirs[$i])`n"
+    $dirRes += "$($dirs[$i])`n"
   }
   
   return "$dirRes`n$itmRes"
-}
-
-function Write-FileSize
-{
-    param(
-        [Int64]$Size
-    )
-
-    [Int64]$Bytes = $Size % 1KB
-    [Int64]$KBytes = ($Size / 1KB) % 1KB
-    [Int64]$MBytes = ($Size / 1MB) % 1KB
-    [Int64]$GBytes = ($Size / 1GB) % 1TB
-
-    Write-Host "Size of file(s): $($GBytes) GB $($MBytes) MB $($KBytes) KB $($Bytes) B"
 }
 
 $location = Get-Location
