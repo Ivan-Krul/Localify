@@ -69,7 +69,6 @@
 
   .recommend_container {
     width: 100%;
-    background-color: #222;
   }
   
   .slider {
@@ -109,6 +108,13 @@
 
   .overlay {
     padding: 5px;
+  }
+  
+  .hugelist_overlay {
+    margin: 5px;
+    border: none;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
   }
 
   .recommend_overlay {
@@ -171,8 +177,16 @@
   }
 
   #search_music {
-    width: 100%;
     margin-bottom: 5px;
+    margin-top: 5px;
+  }
+
+  summary {
+    cursor: pointer;
+  }
+  
+  button {
+    cursor: pointer;
   }
 
   @media screen and (max-aspect-ratio: 1/1) {
@@ -238,6 +252,35 @@
       max-height: calc(50vh - 70px);
       width: calc(50vw - 20px);
       border-top-left-radius: 10px;
+    }
+
+    .hugelist_overlay {
+      background-color: #333;
+      position: fixed;
+      top: calc(80px + 3ch);
+      left: 5px;
+      min-height: 10vh;
+      width: calc(50vw - 30px);
+      height: calc(100vh - 100px - 3ch);
+      padding: 5px;
+    }
+
+    .hugelist_wrapper {
+      background-color: #222;
+      position: fixed;
+      top: 75px;
+      left: 10px;
+      width: calc(50vw - 20px);
+      height: 10ch;
+      border-top-left-radius: 10px;
+    }
+
+    .search {
+      z-index: 1;
+      position: fixed;
+      top: 75px;
+      left: 15px;
+      width: calc(50vw - 30px);
     }
 
     .overlay {
@@ -372,7 +415,90 @@
         </table>
       </div>
     </div>
-    <div>
+    
+    <div class="hugelist_wrapper">
+      <input type="search" id="search_music" class="search">
+      <div class="hugelist_overlay scrollable">
+        <table id="table_hugelist_container" class="list recommend_container">
+        <tbody>
+        <tr>
+          <td> 
+            
+            <details>
+              <summary><span class="folder">A</span></summary>
+              <table style="border-collapse: collapse;">
+              <tbody>
+                <tr><td style="width: 96%; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; gap: 5px;"><span style="flex: 1 1 auto">B</span><span style="flex: 0 0 auto; text-align: right;"><button>+</button> <button>></button></span></td></tr>
+                <tr><td style="width: 96%; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; gap: 5px;"><span style="flex: 1 1 auto">C</span><span style="flex: 0 0 auto; text-align: right;"><button>+</button> <button>></button></span></td></tr>
+              </tbody>
+              </table>
+            </details>
+          </td>
+        </tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">C</span> D</td></tr>
+        <tr><td> <span class="folder">A</span> B</td></tr>
+        <tr><td> <span class="folder">Y</span> Z</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </div>
+    <!--<div>
       <div class="folder_overlay scrollable">
         <table id="table_folder_container" class="list recommend_container">
         </table>
@@ -382,7 +508,7 @@
         <table id="table_recommend_container" class="list recommend_container">
         </table>
       </div>
-    </div>
+    </div>-->
 
     <button id="button_scrollUp">Scroll up</button>
   </div>
@@ -524,7 +650,7 @@
       this.scaleX = this.eq_visualizer.offsetWidth;
       this.scaleY = this.eq_visualizer.offsetHeight;
 			
-			this.prevDataArray = new Uint8Array(5);
+			this.prevDataArray = new Uint8Array(this.bufferLength);
 			this.repeats = false;
       this.repeatCount = 0;
 
@@ -577,22 +703,15 @@
     Equalizer.prototype.startFrame = function (collect = true) {
       this.x = 0;
 			
-      this.prevDataArray[0] = this.dataArray[0];
-      this.prevDataArray[1] = this.dataArray[3];
-      this.prevDataArray[2] = this.dataArray[15];
-      this.prevDataArray[3] = this.dataArray[32];
-      this.prevDataArray[4] = this.dataArray[64];
-			
+      for(let i = 0; i < this.dataArray.length; i++) {
+				this.prevDataArray[i] = this.dataArray[i];
+			}
+      
       if (collect)
         this.analyser.getByteFrequencyData(this.dataArray);
 
-			this.repeats = 
-        this.dataArray[0] == this.prevDataArray[0] && 
-        this.dataArray[3] == this.prevDataArray[1] && 
-        this.dataArray[15] == this.prevDataArray[2] && 
-        this.dataArray[32] == this.prevDataArray[3] && 
-        this.dataArray[64] == this.prevDataArray[4];
-
+			this.repeats = arraysEqual(this.prevDataArray, this.dataArray);
+        
 			if(this.repeats) {this.repeatCount++; return;}
 			
       this.repeatCount = 0;
@@ -664,6 +783,7 @@
       var count = 0;
 
       const border = 1;
+      const boundary = Math.floor(this.renderLength / 4);
       var currentBorder = border;
       this.barHeight = 0;
 
@@ -674,8 +794,9 @@
         }
         else {
           this.barHeight /= count;
+          this.barHeight = Math.floor(this.barHeight);
           count = 0;
-          this.colorCanvasRectange(Math.floor(this.renderLength / 4));
+          this.colorCanvasRectange(boundary);
           currentBorder = border + currentBorder * 5;
           this.barHeight = 0;
         }
@@ -688,13 +809,71 @@
       this.startFrame();
 			if(this.repeats) return;
 
+      const rl = Math.floor(this.renderLength / 3);
+
       this.barHeight = this.dataArray[0];
-      this.colorCanvasRectange(Math.floor(this.renderLength / 3));
+      this.colorCanvasRectange(rl);
       this.barHeight = this.dataArray[3];
-      this.colorCanvasRectange(Math.floor(this.renderLength / 3));
+      this.colorCanvasRectange(rl);
       this.barHeight = this.dataArray[32];
-      this.colorCanvasRectange(Math.floor(this.renderLength / 3));
+      this.colorCanvasRectange(rl);
     };
+
+    // Function to convert a frequency (in Hz) to its closest musical note name
+    function frequencyToNoteName(frequency) {
+      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      
+      // Calculate the MIDI note number using the formula
+      // A4 is 440 Hz and corresponds to MIDI note number 69
+      const noteNumber = Math.round(12 * Math.log2(frequency / 440)) + 69;
+      
+      // Determine the octave (MIDI octave number: octave = floor(noteNumber / 12) - 1)
+      const octave = Math.floor(noteNumber / 12) - 1;
+      
+      // Get the note name from the noteNames array
+      const noteName = noteNames[noteNumber % 12];
+      return noteName + octave;
+    }
+
+    // Function to convert an amplitude (0-255) into a percentage
+    function amplitudeToPercentage(amplitude) {
+      // Clamp amplitude between 0 and 255 for safety
+      amplitude = Math.max(0, Math.min(amplitude, 255));
+      return Math.round((amplitude / 255) * 100);
+    }
+
+    Equalizer.prototype.getPitch = function () {
+      let k = 0;
+      let maxAmplitude = this.dataArray[0];
+      
+      // Find the index with the maximum amplitude
+      for (let i = 1; i < this.dataArray.length; i++) {
+        if (this.dataArray[i] > maxAmplitude) {
+          maxAmplitude = this.dataArray[i];
+          k = i;
+        }
+      }
+      
+      // If the dominant bin is at an edge, return its frequency directly
+      if (k === 0 || k === this.dataArray.length - 1) {
+        return { frequency: k * 200, amplitude: this.dataArray[k] };
+      }
+      
+      // Retrieve amplitudes from neighbors for interpolation
+      const a = this.dataArray[k - 1];
+      const b = this.dataArray[k];
+      const c = this.dataArray[k + 1];
+      
+      // Calculate the interpolation offset delta (avoid division by zero)
+      const denominator = (a - 2 * b + c);
+      const delta = denominator === 0 ? 0 : (a - c) / (2 * denominator);
+      
+      // Calculate the refined frequency with the interpolation offset
+      const frequency = (k + delta) * 200;
+      
+      // Return both frequency and the peak amplitude value for further processing
+      return { frequency, amplitude: b };
+    }
 
     Equalizer.prototype.unpinAnimation = function () {
       this.startFrame(false);
@@ -738,6 +917,9 @@
         self.scaleY = self.eq_visualizer.offsetHeight / 276;
         self.doRecord(self);
         self.doFrame(self);
+        
+        var pitch = self.getPitch();
+        console.log(`${frequencyToNoteName(pitch.frequency)} %${amplitudeToPercentage(pitch.amplitude)}`);
         
         //this.fpsCounter.requestAnimFrame();
         //console.log(this.fpsCounter.averageFPS);
@@ -965,7 +1147,7 @@
       let stage = localStorage.getItem("EQ_render_mode");
       let target = document.getElementById("select_eqRenderStage");
       
-      equalizer.setResolution(target.value);
+      equalizer.setResolution(stage);
       
       if (stage === undefined) {
         target.value = "no";
