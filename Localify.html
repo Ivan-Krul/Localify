@@ -189,6 +189,28 @@
     cursor: pointer;
   }
 
+  .folder_detail {
+    border-collapse: collapse;
+  }
+
+  .music_entry{
+    width: 96%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    white-space: nowrap;
+    gap: 5px;
+  }
+  
+  .left_music_entry {
+    flex: 1 1 auto;
+  }
+
+  .right_music_entry {
+    flex: 0 0 auto;
+    text-align: right;
+  }
+
   @media screen and (max-aspect-ratio: 1/1) {
     #button_scrollUp {
       position: fixed;
@@ -421,79 +443,20 @@
       <div class="hugelist_overlay scrollable">
         <table id="table_hugelist_container" class="list recommend_container">
         <tbody>
-        <tr>
-          <td> 
-            
-            <details>
-              <summary><span class="folder">A</span></summary>
-              <table style="border-collapse: collapse;">
-              <tbody>
-                <tr><td style="width: 96%; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; gap: 5px;"><span style="flex: 1 1 auto">B</span><span style="flex: 0 0 auto; text-align: right;"><button>+</button> <button>></button></span></td></tr>
-                <tr><td style="width: 96%; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; gap: 5px;"><span style="flex: 1 1 auto">C</span><span style="flex: 0 0 auto; text-align: right;"><button>+</button> <button>></button></span></td></tr>
-              </tbody>
-              </table>
-            </details>
-          </td>
-        </tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">C</span> D</td></tr>
-        <tr><td> <span class="folder">A</span> B</td></tr>
-        <tr><td> <span class="folder">Y</span> Z</td></tr>
+          <template>
+            <tr><td>
+              <details>
+                <summary><span class="folder">a Folder</span></summary>
+                <table class="folder_detail">
+                <tbody>
+                <template>
+                  <tr><td class="music_entry"><span class="left_music_entry">an Entry</span><span class="right_music_entry"><button>+</button> <button click="console.log('A')">></button></span></td></tr>
+                </template>
+                </tbody>
+                </table>
+              </details>
+            </td></tr>
+          </template>
         </tbody>
         </table>
       </div>
@@ -1017,9 +980,9 @@
 
     // globals
     var current = 0
-    var foldLoadFormat = false;
-    var globalList = [];
-    var folderList = [];
+    //var globalList = [];
+    //var folderList = [];
+    var orderList = [];
     var playlist = [];
     var selected = 0;
     var equalizer = new Equalizer();
@@ -1387,8 +1350,7 @@
       tablePl.append(tr);
     }*/
     function initTables() {
-      document.getElementById("table_folder_container").innerHTML += "<tr></tr>";
-      document.getElementById("table_recommend_container").innerHTML += "<tr></tr>";
+      document.getElementById("table_hugelist_container").innerHTML += "<tr></tr>";
       document.getElementById("table_playlist_container").innerHTML += "<tr></tr>";
     }
     function handleClickToCell(event) {
@@ -1571,10 +1533,13 @@
       let l = 0;
       let lines = str.split("\n");
       
-      folderList = [];
-      globalList = [];
+      orderList = [];
       
-      while(lines[l] !== "") { folderList.push(lines[l]); l++; }
+      while(lines[l] !== "") {
+        orderList.push({"name": lines[l], "inside": []});
+        l++;
+      }
+      console.log(orderList);
       
       if(l >= lines.length) {
         console.error("music list is empty");
@@ -1587,8 +1552,8 @@
         const line = lines[l];
         var foldrIndx = line.substr(0, line.indexOf('\t'));
         var musicName = line.substr(foldrIndx.length + 1);
+        orderList[foldrIndx].inside.push(musicName);
         
-        globalList.push(`${folderList[foldrIndx]}${musicName}`);
         l++;
       }
       
@@ -1597,8 +1562,6 @@
     async function loadLists() {
       let file = await readFromFileURL("./fold_content.txt");
       if (file.length) {
-        foldLoadFormat = true;
-        
         parseFoldList(file);
       }
       else {
