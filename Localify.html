@@ -443,20 +443,21 @@
       <div class="hugelist_overlay scrollable">
         <table id="table_hugelist_container" class="list recommend_container">
         <tbody>
-          <template>
-            <tr><td>
-              <details>
-                <summary><span class="folder">a Folder</span></summary>
-                <table class="folder_detail">
-                <tbody>
-                <template>
-                  <tr><td class="music_entry"><span class="left_music_entry">an Entry</span><span class="right_music_entry"><button>+</button> <button click="console.log('A')">></button></span></td></tr>
-                </template>
-                </tbody>
-                </table>
-              </details>
-            </td></tr>
-          </template>
+<template id="template_folder_entry">
+<tr><td>
+<details>
+<i hidden></i>
+<summary><span>a Folder</span></summary>
+<table class="folder_detail">
+<tbody>
+<template>
+<tr><td class="music_entry"><span class="left_music_entry">an Entry</span><span class="right_music_entry"><button>+</button> <button click="console.log('A')">></button></span></td></tr>
+</template>
+</tbody>
+</table>
+</details>
+</td></tr>
+</template>
         </tbody>
         </table>
       </div>
@@ -1353,6 +1354,46 @@
       document.getElementById("table_hugelist_container").innerHTML += "<tr></tr>";
       document.getElementById("table_playlist_container").innerHTML += "<tr></tr>";
     }
+    function outputFolderOrderList() {
+      if ("content" in document.createElement("template")) {
+        const container = document.querySelector("#table_hugelist_container").children[0];
+        const template = document.querySelector("#template_folder_entry");
+        
+        for(let i = 0; i < orderList.length; i++) {
+          const clone = template.content.cloneNode(true);
+          let spans = clone.querySelectorAll("span");
+          spans[0].innerHTML = chopNameHTML(orderList[i].name, directorySeparation);
+          let tr = clone.querySelector("tr");
+          tr.onclick = handleClickToFolderEntry;
+          let id = clone.querySelector("i");
+          id.innerHTML = i;
+          container.appendChild(clone);
+        }
+        
+      }
+      else {
+        console.error("Tag <template> is illegal in the browser");
+      }
+    }
+    function handleClickToFolderEntry(event) {
+      var detail = null;
+      var index = null;
+      
+      if(event.srcElement.nodeName === "SUMMARY") {
+        detail = event.srcElement.parentNode;
+        index = detail.children[0].innerText;
+      }
+      if(event.srcElement.nodeName === "TD") {
+        detail = event.srcElement.children[0];
+        index = detail.children[0].innerText;
+      }
+      if(event.srcElement.nodeName === "SPAN") {
+        detail = event.srcElement.parentElement.parentElement.parentElement;
+        index = detail.children[0].innerText;
+      }
+      
+      // provoke unwrapping
+    }
     function handleClickToCell(event) {
       if (event.target.index !== undefined) {
         selected = event.target.index;
@@ -1536,10 +1577,9 @@
       orderList = [];
       
       while(lines[l] !== "") {
-        orderList.push({"name": lines[l], "inside": []});
+        orderList.push({"name": lines[l], "unwrapped": false, "inside": []});
         l++;
       }
-      console.log(orderList);
       
       if(l >= lines.length) {
         console.error("music list is empty");
@@ -1552,7 +1592,8 @@
         const line = lines[l];
         var foldrIndx = line.substr(0, line.indexOf('\t'));
         var musicName = line.substr(foldrIndx.length + 1);
-        orderList[foldrIndx].inside.push(musicName);
+        if(foldrIndx)
+          orderList[foldrIndx].inside.push(musicName);
         
         l++;
       }
@@ -1579,7 +1620,10 @@
     (async () => {
       await loadLists();
 
+      console.log(orderList);
+
       initTables();
+      outputFolderOrderList();
       
       setVolume();
       getColorFromLocalStorage();
