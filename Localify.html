@@ -195,7 +195,7 @@
 
   .music_entry{
     width: 96%;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
     white-space: nowrap;
@@ -443,21 +443,21 @@
       <div class="hugelist_overlay scrollable">
         <table id="table_hugelist_container" class="list recommend_container">
         <tbody>
-<template id="template_folder_entry">
-<tr><td>
-<details>
-<i hidden></i>
-<summary><span>a Folder</span></summary>
-<table class="folder_detail">
-<tbody>
-<template>
-<tr><td class="music_entry"><span class="left_music_entry">an Entry</span><span class="right_music_entry"><button>+</button> <button click="console.log('A')">></button></span></td></tr>
-</template>
-</tbody>
-</table>
-</details>
-</td></tr>
-</template>
+          <template id="template_folder_entry">
+            <tr><td>
+              <details>
+                <i hidden></i>
+                <summary><span>a Folder</span></summary>
+                <table class="folder_detail">
+                  <tbody>
+                    <template id="template_music_entry">
+                    <tr><td class="music_entry"><span class="left_music_entry">an Entry</span><span class="right_music_entry"><button>+</button> <button click="console.log('A')">></button></span></td></tr>
+                    </template>
+                  </tbody>
+                </table>
+              </details>
+            </td></tr>
+          </template>
         </tbody>
         </table>
       </div>
@@ -538,7 +538,7 @@
     function getSharedFolders(list = []) {
       let sharedFolderList = [];
       
-      
+      // for folder entries in folder entries
       
     }
     
@@ -883,7 +883,7 @@
         self.doFrame(self);
         
         var pitch = self.getPitch();
-        console.log(`${frequencyToNoteName(pitch.frequency)} %${amplitudeToPercentage(pitch.amplitude)}`);
+        //console.log(`${frequencyToNoteName(pitch.frequency)} %${amplitudeToPercentage(pitch.amplitude)}`);
         
         //this.fpsCounter.requestAnimFrame();
         //console.log(this.fpsCounter.averageFPS);
@@ -981,7 +981,7 @@
 
     // globals
     var current = 0
-    //var globalList = [];
+    var globalList = [];
     //var folderList = [];
     var orderList = [];
     var playlist = [];
@@ -1008,13 +1008,18 @@
       return finalList;
     }
 
-    async function setMusicToPlay() {
+    function isFilePlaylist(global_ind) {
+      return globalList[global_ind].match(/.*\.m3u(|8)/);
+    }
+
+    function setMusicToPlay() {
       if(eqRecord)
         handleEndRecords();
 
       let set = getCurrentMusicLink();
 
       console.log(set);
+      
       let player = document.getElementById("player");
       let name = document.getElementById("name");
       let album = document.getElementById("album");
@@ -1042,12 +1047,11 @@
           outputPlaylist(playlist);
         }
         else {
-          await setMusicToPlay();
-          pushToList();
+          setMusicToPlay();
         }
       }
       else
-        await setMusicToPlay();
+        setMusicToPlay();
     }
     function nextMusic(player) {
       if (selected !== -1)
@@ -1363,10 +1367,10 @@
           const clone = template.content.cloneNode(true);
           let spans = clone.querySelectorAll("span");
           spans[0].innerHTML = chopNameHTML(orderList[i].name, directorySeparation);
-          let tr = clone.querySelector("tr");
-          tr.onclick = handleClickToFolderEntry;
-          let id = clone.querySelector("i");
-          id.innerHTML = i;
+          let tr = clone.querySelector("details");
+          tr.onclick = function(event) {
+            handleClickToFolderEntry(event, i, tr.querySelector("tbody"));
+          }
           container.appendChild(clone);
         }
         
@@ -1375,24 +1379,68 @@
         console.error("Tag <template> is illegal in the browser");
       }
     }
-    function handleClickToFolderEntry(event) {
-      var detail = null;
-      var index = null;
+    function handleClickToFolderEntry(event, index, tb) {
+      //var detail = null;
+      //var index = null;
+      //
+      //if(event.srcElement.nodeName === "SUMMARY") {
+      //  detail = event.srcElement.parentNode;
+      //  if(detail.children[0] === undefined) return;
+      //  index = detail.children[0].innerText;
+      //}
+      //else if(event.srcElement.nodeName === "TD") {
+      //  detail = event.srcElement.children[0];
+      //  if(detail.children[0] === undefined) return;
+      //  index = detail.children[0].innerText;
+      //}
+      //else if(event.srcElement.nodeName === "SPAN") {
+      //  detail = event.srcElement.parentElement.parentElement.parentElement;
+      //  if(detail.children[0] === undefined) return;
+      //  index = detail.children[0].innerText;
+      //}
+      //else return;
+      //
+      //if(index === "") return;
+
       
-      if(event.srcElement.nodeName === "SUMMARY") {
-        detail = event.srcElement.parentNode;
-        index = detail.children[0].innerText;
-      }
-      if(event.srcElement.nodeName === "TD") {
-        detail = event.srcElement.children[0];
-        index = detail.children[0].innerText;
-      }
-      if(event.srcElement.nodeName === "SPAN") {
-        detail = event.srcElement.parentElement.parentElement.parentElement;
-        index = detail.children[0].innerText;
-      }
-      
+
       // provoke unwrapping
+      if(orderList[index].wrapped) {
+        const inside = orderList[index].inside;
+        
+        //let tb = detail.querySelector("tbody");
+        
+        orderList[index].wrapped = false;
+        if ("content" in document.createElement("template")) {
+          const template = document.querySelector("#template_music_entry");
+          for(let i = 0; i < inside.length; i++) {
+            const clone = template.content.cloneNode(true);
+            let spans = clone.querySelectorAll("span");
+            spans[0].innerText = convertLinkToName(inside[i]);
+            let buttons = clone.querySelectorAll("button");
+            buttons[0].onclick = function(event) {
+              handleClickToAddHugeList(event, orderList[index].global_base_index + i);
+            }
+            buttons[1].onclick = function(event) {
+              handleClickToPlayHugeList(event, orderList[index].global_base_index + i);
+            }
+            tb.appendChild(clone);
+          }
+        }
+        else {
+          console.error("Tag <template> is illegal in the browser");
+        }
+      }
+    }
+    async function handleClickToAddHugeList(event, global_ind = 0){
+      if(isFilePlaylist(global_ind))
+      playlist.push(globalList[global_ind]);
+      outputPlaylist(playlist);
+    }
+    function handleClickToPlayHugeList(event, global_ind = 0){
+      selected = -1;
+      current = global_ind;
+      forcePlay();
     }
     function handleClickToCell(event) {
       if (event.target.index !== undefined) {
@@ -1414,51 +1462,51 @@
       });
       return indexes;
     }
-    function handleClickFolder(event) {
-      let folder = folderList[event.target.value];
-      let foldList = globalList.filter((sth) => { return sth.includes(folder) });
-
-      outputPartionRecommends(foldList, selectElementsAndOutputIndexes(globalList, folder));
-    }
-    function foldAllFolders(list = []) {
-      let table = document.getElementById("table_folder_container");
-      let colomn = table.getElementsByTagName("tr")[0];
-      colomn.innerHTML = "";
-
-      for (let i = 0; i < list.length; i++) {
-        let td = document.createElement("td");
-        td.onclick = handleClickFolder;
-        td.innerHTML = chopNameHTML(list[i], directorySeparation);
-        td.value = i;
-        colomn.append(td);
-      }
-    }
-    function outputPartionRecommends(list = [], indexes = []) {
-      let table = document.getElementById("table_recommend_container");
-      let colomn = table.getElementsByTagName("tr")[0];
-      colomn.innerHTML = "";
-
-      for (let i = 0; i < list.length; i++) {
-        let td = document.createElement("td");
-        td.onclick = handleClickToCell;
-        td.innerHTML = chopNameHTML(list[i], directorySeparation) + convertLinkToName(list[i]);
-        td.value = indexes[i];
-        colomn.append(td);
-      }
-    }
-    function outputRecommends(list = []) {
-      let table = document.getElementById("table_recommend_container");
-      let colomn = table.getElementsByTagName("tr")[0];
-      colomn.innerHTML = "";
-
-      for (let i = 0; i < list.length; i++) {
-        let td = document.createElement("td");
-        td.onclick = handleClickToCell;
-        td.innerHTML = chopNameHTML(list[i], directorySeparation) + convertLinkToName(list[i]);
-        td.value = i;
-        colomn.append(td);
-      }
-    }
+//    function handleClickFolder(event) {
+//      let folder = folderList[event.target.value];
+//      let foldList = globalList.filter((sth) => { return sth.includes(folder) });
+//
+//      outputPartionRecommends(foldList, selectElementsAndOutputIndexes(globalList, folder));
+//    }
+//    function foldAllFolders(list = []) {
+//      let table = document.getElementById("table_folder_container");
+//      let colomn = table.getElementsByTagName("tr")[0];
+//      colomn.innerHTML = "";
+//
+//      for (let i = 0; i < list.length; i++) {
+//        let td = document.createElement("td");
+//        td.onclick = handleClickFolder;
+//        td.innerHTML = chopNameHTML(list[i], directorySeparation);
+//        td.value = i;
+//        colomn.append(td);
+//      }
+//    }
+//    function outputPartionRecommends(list = [], indexes = []) {
+//      let table = document.getElementById("table_recommend_container");
+//      let colomn = table.getElementsByTagName("tr")[0];
+//      colomn.innerHTML = "";
+//
+//      for (let i = 0; i < list.length; i++) {
+//        let td = document.createElement("td");
+//        td.onclick = handleClickToCell;
+//        td.innerHTML = chopNameHTML(list[i], directorySeparation) + convertLinkToName(list[i]);
+//        td.value = indexes[i];
+//        colomn.append(td);
+//      }
+//    }
+//    function outputRecommends(list = []) {
+//      let table = document.getElementById("table_recommend_container");
+//      let colomn = table.getElementsByTagName("tr")[0];
+//      colomn.innerHTML = "";
+//    
+//      for (let i = 0; i < list.length; i++) {
+//        let td = document.createElement("td");
+//        td.onclick = handleClickToCell;
+//        td.innerHTML = chopNameHTML(list[i], directorySeparation) + convertLinkToName(list[i]);
+//        td.value = i;
+//        colomn.append(td);
+//      }
+//    }
     function outputPlaylist(list = []) {
       document.getElementById("playlist_placeholder").style.display = (list.length === 0) ? "inherit" : "none";
 
@@ -1485,7 +1533,7 @@
 
       let list = globalList.filter((elem) => {return (elem.toLowerCase()).includes(target.target.value.toLowerCase());});
       
-      outputPartionRecommends(list, selectElementsAndOutputIndexes(globalList, target.target.value, true));
+      //outputPartionRecommends(list, selectElementsAndOutputIndexes(globalList, target.target.value, true));
     }
     document.getElementById("search_music").oninput = searchMusicByName;
 
@@ -1575,9 +1623,10 @@
       let lines = str.split("\n");
       
       orderList = [];
+      globalList = [];
       
       while(lines[l] !== "") {
-        orderList.push({"name": lines[l], "unwrapped": false, "inside": []});
+        orderList.push({"name": lines[l], "global_base_index": -1, "wrapped": true, "inside": []});
         l++;
       }
       
@@ -1587,15 +1636,21 @@
       }
       
       l++;
+      let i = 0;
       
       while (lines[l] !== "") {
         const line = lines[l];
         var foldrIndx = line.substr(0, line.indexOf('\t'));
         var musicName = line.substr(foldrIndx.length + 1);
-        if(foldrIndx)
+        if(foldrIndx) {
+          if(orderList[foldrIndx].global_base_index === -1)
+            orderList[foldrIndx].global_base_index = i;
+          globalList.push(orderList[foldrIndx].name + musicName);
           orderList[foldrIndx].inside.push(musicName);
+        }
         
         l++;
+        i++;
       }
       
     }
@@ -1620,8 +1675,6 @@
     (async () => {
       await loadLists();
 
-      console.log(orderList);
-
       initTables();
       outputFolderOrderList();
       
@@ -1630,8 +1683,8 @@
       initSelectorEQ();
       equalizer.checkStage();
       
-      foldAllFolders(folderList);
-      outputRecommends(globalList);
+      //foldAllFolders(folderList);
+      //outputRecommends(globalList);
       forceChangeFrameRate(document.getElementById("number_delay").value);
     })();
   </script>
