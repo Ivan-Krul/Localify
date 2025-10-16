@@ -1093,9 +1093,11 @@
 
     // choose randomly
     function selectRandomMusic() {
-      let trC = document.getElementById("table_recommend_container").children[0].children[0].children;
+      playlist.push(globalList[getRandomInt(globalList.length)]);
+      outputPlaylist(playlist);
+      //let trC = document.getElementById("table_recommend_container").children[0].children[0].children;
       
-      trC[getRandomInt(trC.length)].click();
+      //trC[getRandomInt(trC.length)].click();
     }
     document.getElementById("button_chooseRandomly").onclick = selectRandomMusic;
 
@@ -1367,10 +1369,10 @@
           const clone = template.content.cloneNode(true);
           let spans = clone.querySelectorAll("span");
           spans[0].innerHTML = chopNameHTML(orderList[i].name, directorySeparation);
-          let tr = clone.querySelector("details");
-          tr.onclick = function(event) {
-            handleClickToFolderEntry(event, i, tr.querySelector("tbody"));
-          }
+          let details = clone.querySelector("details");
+          let tb = details.querySelector("tbody");
+          details.onclick = function(event) { handleClickToFolderEntry(event, i, tb); }
+          tb.ondblclick = function(event) { details.open = false; }
           container.appendChild(clone);
         }
         
@@ -1433,8 +1435,13 @@
       }
     }
     async function handleClickToAddHugeList(event, global_ind = 0){
-      if(isFilePlaylist(global_ind))
-      playlist.push(globalList[global_ind]);
+      if(isFilePlaylist(global_ind)) {
+        const list = await getListM3U8(globalList[global_ind]);
+        playlist.splice.apply(playlist, [playlist.length, 0].concat(list));
+      }
+      else {
+        playlist.push(globalList[global_ind]);
+      }
       outputPlaylist(playlist);
     }
     function handleClickToPlayHugeList(event, global_ind = 0){
